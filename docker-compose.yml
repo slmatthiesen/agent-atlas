@@ -1,0 +1,14 @@
+services:
+  agent-governance-platform:
+    build: .
+    ports:
+      - "8090:8090"
+    environment:
+      - GCP_PROJECT=${GCP_PROJECT:?set GCP_PROJECT to your project id}
+      - GCP_REGION=${GCP_REGION:-us-central1}
+      - GOOGLE_APPLICATION_CREDENTIALS=/gcp/adc.json
+    volumes:
+      # Application Default Credentials from the host. The app resolves credentials
+      # through ADC rather than shelling out to gcloud, so the CLI is not needed here.
+      - ${APPDATA:-$HOME/.config}/gcloud/application_default_credentials.json:/gcp/adc.json:ro
+    restart: unless-stopped

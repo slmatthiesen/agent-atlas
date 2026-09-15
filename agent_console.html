@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Governance Console — GCP Multi-Agent Platform</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Same paper palette as the operations portal. Variable names are kept from the
+         previous dark theme so the markup did not have to be rewritten to retheme. */
+      --bg-navy: #FAF7F2;          /* page */
+      --panel-navy: #FFFFFF;       /* cards */
+      --panel-sunk: #F3EFE8;       /* wells, table headers */
+      --panel-border: #E4DED3;
+      --panel-border-strong: #D0C7B8;
+
+      --text-heading: #221F1A;
+      --text-main: #4A443B;
+      --text-muted: #766F64;
+      --text-dim: #9A9287;
+
+      --accent-gold: #A2660F;
+      --accent-gold-bright: #8A570C;
+      --accent-blue: #0F6E63;      /* primary action — teal reads calmer than blue here */
+      --accent-blue-bright: #0B554C;
+      --accent-sky: #1D4E78;
+
+      --status-green: #1A6E4A;
+      --status-green-bg: #E4F1EA;
+      --status-red: #A32B26;
+      --status-red-bg: #F8E8E7;
+      --status-amber: #A2660F;
+      --status-amber-bg: #FAF0DC;
+      --status-purple: #5B4B8A;
+
+      --shadow-sm: 0 1px 2px rgba(60, 50, 35, 0.06);
+      --shadow-md: 0 2px 4px rgba(60, 50, 35, 0.06), 0 6px 16px rgba(60, 50, 35, 0.07);
+
+      --font-sans: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-navy);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ------------------------------------------------------- SHELL / SIDEBAR
+       Mirrors the operations portal so the two surfaces read as one product. */
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 246px; flex-shrink: 0;
+      background: var(--panel-navy); border-right: 1px solid var(--panel-border);
+      display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    .brand {
+      padding: 1.35rem 1.25rem; border-bottom: 1px solid var(--panel-border);
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .brand-mark {
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 9px;
+      background: linear-gradient(140deg, var(--accent-gold), var(--accent-blue));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-mark svg { width: 20px; height: 20px; fill: #fff; }
+    .brand-text { min-width: 0; }
+    .brand-text h1 { font-size: 0.95rem; font-weight: 700; color: var(--text-heading); letter-spacing: -0.01em; }
+    .brand-text span { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; display: block; overflow-wrap: anywhere; }
+
+    .nav { padding: 0.85rem 0.7rem; flex: 1; }
+    .nav-label {
+      font-size: 0.66rem; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 0.6rem 0.55rem 0.35rem;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.6rem; width: 100%;
+      padding: 0.55rem 0.6rem; margin-bottom: 2px; border-radius: 7px;
+      font-size: 0.855rem; font-weight: 500; font-family: inherit;
+      color: var(--text-main); background: none; border: none; text-align: left;
+      cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+    }
+    .nav-item:hover { background: var(--panel-sunk); color: var(--text-heading); }
+    .nav-item.active { background: rgba(15, 110, 99, 0.1); color: var(--accent-blue); font-weight: 600; }
+    .nav-item .ico { width: 17px; text-align: center; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .tag {
+      margin-left: auto; flex-shrink: 0; white-space: nowrap;
+      font-family: var(--font-mono); font-size: 0.58rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 0.12rem 0.38rem; border-radius: 4px;
+    }
+    .tag.live { background: var(--status-green-bg); color: var(--status-green); }
+    .tag.sim { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+    .sidebar-foot { padding: 0.85rem; border-top: 1px solid var(--panel-border); }
+    .biz-link {
+      display: flex; align-items: center; gap: 0.55rem;
+      padding: 0.65rem 0.75rem; border-radius: 8px;
+      background: var(--text-heading); color: #F5F2EC; text-decoration: none;
+      font-size: 0.8rem; font-weight: 600; transition: background 0.15s ease;
+    }
+    .biz-link:hover { background: #38332B; }
+    .biz-link small { display: block; font-weight: 400; opacity: 0.72; font-size: 0.7rem; }
+
+    .health-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.7rem; padding: 0 0.2rem;
+      font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; color: var(--status-green);
+    }
+    .health-pill.degraded { color: var(--status-red); }
+    .health-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .main { flex: 1; min-width: 0; }
+    .mobile-bar { display: none; }
+    .container { max-width: 1180px; margin: 0 auto; padding: 2rem 2.25rem 4rem; width: 100%; }
+
+    .view-content { display: none; }
+    .view-content.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-box {
+      background: var(--panel-navy); border: 1px solid var(--panel-border);
+      border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);
+    }
+
+    .section-header {
+      margin-bottom: 1.25rem; border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 1rem; display: flex; justify-content: space-between;
+      align-items: flex-start; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .section-header h3 { font-size: 1.15rem; font-weight: 700; color: var(--text-heading); }
+    .section-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; max-width: 72ch; }
+
+    /* Provenance badges — every panel declares whether it hits Google Cloud. */
+    .prov-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem; flex-shrink: 0;
+      padding: 0.3rem 0.7rem; border-radius: 20px;
+      font-size: 0.68rem; font-weight: 700; font-family: var(--font-mono);
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .prov-badge.live { background: var(--status-green-bg); color: var(--status-green); border: 1px solid rgba(16,185,129,0.35); }
+    .prov-badge.sim { background: rgba(148,163,184,0.12); color: var(--text-muted); border: 1px solid rgba(148,163,184,0.3); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.25rem 0.6rem; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700; font-family: var(--font-mono);
+    }
+    .status-pill.green { background: var(--status-green-bg); color: var(--status-green); border: 1px solid rgba(16,185,129,0.3); }
+    .status-pill.red { background: var(--status-red-bg); color: var(--status-red); border: 1px solid rgba(239,68,68,0.3); }
+    .status-pill.amber { background: rgba(245,158,11,0.12); color: var(--status-amber); border: 1px solid rgba(245,158,11,0.3); }
+    .status-pill.purple { background: rgba(139,92,246,0.12); color: var(--status-purple); border: 1px solid rgba(139,92,246,0.3); }
+    .status-pill.grey { background: rgba(148,163,184,0.12); color: var(--text-muted); border: 1px solid rgba(148,163,184,0.3); }
+
+    .btn-action {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: var(--accent-blue); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; font-size: 0.83rem; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-action:hover { background: var(--accent-blue-bright); box-shadow: var(--shadow-md); }
+    .btn-action:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-action.gold { background: var(--accent-gold); }
+    .btn-action.gold:hover { background: var(--accent-gold-bright); box-shadow: var(--shadow-md); }
+    .btn-action.red { background: var(--status-red); }
+    .btn-action.red:hover { background: #8A2320; box-shadow: var(--shadow-md); }
+    .btn-action.ghost { background: transparent; border: 1px solid var(--panel-border); color: var(--text-muted); }
+    .btn-action.ghost:hover { background: var(--panel-sunk); color: var(--text-heading); }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    .form-input, .form-select, .form-textarea {
+      background: var(--bg-navy); border: 1px solid var(--panel-border);
+      border-radius: 8px; color: var(--text-heading); padding: 0.65rem 0.8rem;
+      font-family: var(--font-sans); font-size: 0.85rem; width: 100%;
+    }
+    .form-textarea { font-family: var(--font-mono); font-size: 0.8rem; resize: vertical; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: 2px solid var(--accent-blue); outline-offset: -1px; }
+
+    .data-table-container { overflow-x: auto; border-radius: 10px; border: 1px solid var(--panel-border); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.83rem; min-width: 640px; }
+    .data-table th {
+      background: var(--panel-sunk); color: var(--text-muted); font-weight: 600;
+      text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.03em;
+      padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--panel-border); white-space: nowrap;
+    }
+    .data-table td { padding: 0.85rem 0.9rem; border-bottom: 1px solid var(--panel-border); color: var(--text-main); }
+    .data-table tr:hover { background: #FCFAF6; }
+    .data-table code { font-family: var(--font-mono); font-size: 0.8rem; }
+    .row-best { background: rgba(16, 185, 129, 0.06); }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.15rem; }
+    .agent-card {
+      background: var(--bg-navy); border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 1.2rem;
+      display: flex; flex-direction: column; gap: 0.85rem;
+      transition: border-color 0.2s ease;
+    }
+    .agent-card:hover { border-color: var(--accent-blue); box-shadow: var(--shadow-md); }
+
+    .kv { font-size: 0.78rem; color: var(--text-muted); }
+    .kv strong { color: var(--text-heading); font-weight: 600; }
+    .mono-sm { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-sky); word-break: break-all; }
+
+    .code-block {
+      background: var(--panel-sunk); border: 1px solid var(--panel-border);
+      border-radius: 8px; padding: 0.85rem;
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-main);
+      white-space: pre-wrap; word-break: break-word; line-height: 1.55;
+      overflow-x: auto;
+    }
+
+    .error-box {
+      background: var(--status-red-bg); border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 8px; padding: 0.9rem; color: #FCA5A5;
+      font-family: var(--font-mono); font-size: 0.8rem; white-space: pre-wrap;
+    }
+
+    .empty-note { color: var(--text-dim); font-size: 0.85rem; font-style: italic; padding: 1rem 0; }
+
+    .spinner {
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(60,50,35,0.2); border-top-color: var(--accent-blue);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Layer chain used by the containment console */
+    .layer-chain { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.15rem; }
+    .layer-card {
+      border-radius: 10px; padding: 1rem 1.1rem;
+      border: 1px solid var(--panel-border); background: var(--bg-navy);
+      border-left-width: 4px;
+    }
+    .layer-card.blocked { border-left-color: var(--status-red); }
+    .layer-card.passed  { border-left-color: var(--status-amber); }
+    .layer-card.denied  { border-left-color: var(--status-green); }
+    .layer-card.skipped { border-left-color: var(--text-dim); opacity: 0.68; }
+    .layer-card.allowed { border-left-color: var(--status-red); }
+    .layer-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .layer-head h5 { font-size: 0.92rem; color: var(--text-heading); font-weight: 700; }
+
+    .verdict-banner {
+      border-radius: 10px; padding: 1rem 1.15rem; margin-top: 1.15rem;
+      font-size: 0.9rem; font-weight: 600; line-height: 1.55;
+      border: 1px solid;
+    }
+    .verdict-banner.contained { background: var(--status-green-bg); border-color: rgba(16,185,129,0.35); color: #6EE7B7; }
+    .verdict-banner.breached  { background: var(--status-red-bg); border-color: rgba(239,68,68,0.35); color: #FCA5A5; }
+
+    .preset-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .preset-btn {
+      background: var(--panel-navy); border: 1px solid var(--panel-border-strong);
+      color: var(--text-muted); border-radius: 7px; padding: 0.45rem 0.75rem;
+      font-size: 0.76rem; font-weight: 600; font-family: inherit; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .preset-btn:hover { color: var(--text-heading); border-color: var(--accent-blue); background: var(--panel-sunk); }
+    .preset-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+    .toggle-row { display: flex; align-items: center; gap: 0.6rem; margin: 0.9rem 0; flex-wrap: wrap; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: #475569; border-radius: 24px; transition: 0.25s;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.25s;
+    }
+    .switch input:checked + .slider { background: var(--status-green); }
+    .switch input:checked + .slider:before { transform: translateX(20px); }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(34, 31, 26, 0.38); backdrop-filter: blur(6px);
+      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+      opacity: 0; visibility: hidden; transition: all 0.25s ease;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-container {
+      background: var(--panel-navy); border: 1px solid var(--panel-border); border-radius: 16px;
+      width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header {
+      padding: 1.1rem 1.5rem; background: var(--panel-sunk);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    }
+    .modal-body { padding: 1.35rem; overflow-y: auto; flex: 1; }
+
+    .split-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .split-sidebar { display: grid; grid-template-columns: 320px 1fr; gap: 1.35rem; }
+
+    .diagram-scroll { width: 100%; overflow-x: auto; background: #1B2436; border-radius: 12px;
+      padding: 14px; border: 1px solid var(--panel-border); }
+
+    /* ------------------------------------------------------------ RESPONSIVE */
+    @media (max-width: 1000px) {
+      .sidebar {
+        position: fixed; z-index: 300; transform: translateX(-100%);
+        transition: transform 0.22s ease; box-shadow: var(--shadow-md);
+      }
+      .sidebar.open { transform: none; }
+      .mobile-bar {
+        display: flex; align-items: center; gap: 0.7rem;
+        padding: 0.7rem 1rem; background: var(--panel-navy);
+        border-bottom: 1px solid var(--panel-border); position: sticky; top: 0; z-index: 150;
+      }
+      .mobile-bar h1 { font-size: 0.92rem; font-weight: 700; color: var(--text-heading); }
+      .mobile-bar .btn-action { width: auto; }
+      .mobile-bar h1 { white-space: nowrap; }
+      .container { padding: 1.35rem 1.15rem 3rem; }
+    }
+
+    @media (max-width: 900px) {
+      .split-2, .split-sidebar { grid-template-columns: 1fr; }
+      .section-box { padding: 1.15rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .section-header h3 { font-size: 1.02rem; }
+      .btn-action { width: 100%; }
+      .preset-btn { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>Governance Console</h1>
+        <span id="brandSubtitle">connecting…</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="navTabs">
+      <div class="nav-label">Live against this project</div>
+      <button class="nav-item active" data-tab="tabContainment"><span class="ico">🛡️</span> IAM Containment <span class="tag live">live</span></button>
+      <button class="nav-item" data-tab="tabEvals"><span class="ico">📊</span> Model Evals &amp; Cost <span class="tag live">measured</span></button>
+      <button class="nav-item" data-tab="tabRag"><span class="ico">📚</span> RAG &amp; Memory <span class="tag live">live</span></button>
+      <button class="nav-item" data-tab="tabRegistry"><span class="ico">🏛️</span> Agent Registry</button>
+
+      <div class="nav-label">Reference</div>
+      <button class="nav-item" data-tab="tabArch"><span class="ico">🗺️</span> Architecture</button>
+
+      <div class="nav-label">Simulated</div>
+      <button class="nav-item" data-tab="tabLogs"><span class="ico">📝</span> Execution Logs <span class="tag sim">sample</span></button>
+      <button class="nav-item" data-tab="tabBuilder"><span class="ico">🤖</span> Agent Builder <span class="tag sim">plan</span></button>
+      <button class="nav-item" data-tab="tabArmor"><span class="ico">🔥</span> Cloud Armor WAF <span class="tag sim">sim</span></button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <a href="/business" class="biz-link">
+        <span>💼</span>
+        <span>Business Portal
+          <small>Operations, blast radius &amp; agents</small>
+        </span>
+      </a>
+      <div class="health-pill" id="healthPill"><span class="dot"></span><span id="healthText">connecting…</span></div>
+    </div>
+  </aside>
+
+  <div class="main">
+  <div class="mobile-bar">
+    <button class="btn-action ghost" style="padding:0.35rem 0.65rem;" id="menuBtn" aria-label="Toggle navigation">☰</button>
+    <h1>Governance Console</h1>
+  </div>
+
+  <div class="container">
+
+    <!-- ================================================== TAB: IAM CONTAINMENT -->
+    <div class="view-content active" id="tabContainment">
+      <div class="section-box" style="border-color: rgba(16,185,129,0.3);">
+        <div class="section-header">
+          <div>
+            <h3>Prompt Injection Containment — Two Real Layers</h3>
+            <p>
+              Send an attack prompt through the chain. Layer 2 is a live Model Armor call.
+              Layer 3 runs a real BigQuery query under the agent's own service account, so a
+              denial is issued by Google Cloud IAM rather than by this application. Turn Model
+              Armor off to prove Layer 3 stands on its own.
+            </p>
+          </div>
+          <span class="prov-badge live">● Live GCP calls</span>
+        </div>
+
+        <div class="split-2">
+          <div>
+            <label class="form-label">Attack presets</label>
+            <div class="preset-row" id="presetRow"></div>
+
+            <div class="form-group">
+              <label class="form-label" for="attackPrompt">Prompt sent to the agent</label>
+              <textarea id="attackPrompt" class="form-textarea" rows="3"></textarea>
+              <div style="font-size:0.75rem; color:var(--text-dim);" id="presetNote"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="agentSelect">Run as identity</label>
+              <select id="agentSelect" class="form-select"></select>
+              <div style="font-size:0.75rem; color:var(--text-dim);" id="agentScopeNote"></div>
+            </div>
+
+            <div class="toggle-row">
+              <label class="switch">
+                <input type="checkbox" id="armorToggle" checked>
+                <span class="slider"></span>
+              </label>
+              <div>
+                <div style="font-size:0.83rem; font-weight:600; color:var(--text-heading);">Model Armor screening</div>
+                <div style="font-size:0.75rem; color:var(--text-dim);" id="armorToggleNote">Enabled — prompts are screened before reaching an identity.</div>
+              </div>
+            </div>
+
+            <button class="btn-action red" id="runAttackBtn">💥 Run containment test</button>
+          </div>
+
+          <div>
+            <div class="kv" style="margin-bottom:0.5rem;">
+              <strong>Target resource</strong>
+              <div class="mono-sm" id="targetResource">—</div>
+            </div>
+            <div id="containmentResult">
+              <div class="empty-note">Run a test to see what each layer actually did.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================= TAB: ARCHITECTURE -->
+    <div class="view-content" id="tabArch">
+      <div class="section-box" style="border-color: rgba(59,130,246,0.3);">
+        <div class="section-header">
+          <div>
+            <h3>Trust Boundaries &amp; Blast Radius</h3>
+            <p>Each agent runs under its own service account. Red edges are denied by IAM, not by application code — the containment tab exercises them live.</p>
+          </div>
+          <span class="prov-badge sim">Static diagram</span>
+        </div>
+
+        <div class="diagram-scroll">
+          <svg viewBox="0 0 1180 470" width="100%" style="min-width:900px; height:auto;" role="img"
+               aria-label="Architecture showing each agent running under its own service account with denied paths to protected data">
+            <defs>
+              <linearGradient id="gBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#1D4ED8"/>
+              </linearGradient>
+              <linearGradient id="gPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#6D28D9"/>
+              </linearGradient>
+              <linearGradient id="gData" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0EA5E9"/><stop offset="100%" stop-color="#0369A1"/>
+              </linearGradient>
+              <marker id="mBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6"/>
+              </marker>
+              <marker id="mRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444"/>
+              </marker>
+              <marker id="mGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#10B981"/>
+              </marker>
+            </defs>
+
+            <!-- ingress -->
+            <g transform="translate(12,190)">
+              <rect width="96" height="76" rx="10" fill="#7C2D12" stroke="#F59E0B" stroke-width="1.5"/>
+              <text x="48" y="30" text-anchor="middle" fill="#FFF" font-size="12" font-weight="bold">Caller</text>
+              <text x="48" y="50" text-anchor="middle" fill="#FED7AA" font-size="9">Clinic / telephony</text>
+            </g>
+            <line x1="108" y1="228" x2="150" y2="228" stroke="#3B82F6" stroke-width="2.5" marker-end="url(#mBlue)"/>
+
+            <!-- model armor -->
+            <g transform="translate(150,182)">
+              <rect width="132" height="92" rx="10" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.5"/>
+              <text x="66" y="26" text-anchor="middle" fill="#FCA5A5" font-size="9" font-weight="bold">LAYER 2</text>
+              <text x="66" y="46" text-anchor="middle" fill="#FFF" font-size="11.5" font-weight="bold">Model Armor</text>
+              <text x="66" y="64" text-anchor="middle" fill="#FECACA" font-size="8.5">PI / jailbreak filter</text>
+              <text x="66" y="79" text-anchor="middle" fill="#FECACA" font-size="8.5">live API call</text>
+            </g>
+            <line x1="282" y1="228" x2="324" y2="228" stroke="#3B82F6" stroke-width="2.5" marker-end="url(#mBlue)"/>
+
+            <!-- agents column -->
+            <g transform="translate(324,40)">
+              <rect width="176" height="86" rx="10" fill="url(#gBlue)" stroke="#60A5FA" stroke-width="1.5"/>
+              <text x="88" y="24" text-anchor="middle" fill="#BFDBFE" font-size="9" font-weight="bold">sales-agent</text>
+              <text x="88" y="44" text-anchor="middle" fill="#FFF" font-size="10" font-family="monospace">agent-sales@</text>
+              <text x="88" y="62" text-anchor="middle" fill="#DBEAFE" font-size="8.5">Firestore catalog + orders</text>
+              <text x="88" y="77" text-anchor="middle" fill="#DBEAFE" font-size="8.5">zero BigQuery permission</text>
+            </g>
+            <g transform="translate(324,148)">
+              <rect width="176" height="86" rx="10" fill="url(#gPurple)" stroke="#C084FC" stroke-width="1.5"/>
+              <text x="88" y="24" text-anchor="middle" fill="#E9D5FF" font-size="9" font-weight="bold">verification-agent</text>
+              <text x="88" y="44" text-anchor="middle" fill="#FFF" font-size="10" font-family="monospace">agent-verify@</text>
+              <text x="88" y="62" text-anchor="middle" fill="#F3E8FF" font-size="8.5">deterministic licence gate</text>
+              <text x="88" y="77" text-anchor="middle" fill="#F3E8FF" font-size="8.5">not a model decision</text>
+            </g>
+            <g transform="translate(324,256)">
+              <rect width="176" height="86" rx="10" fill="url(#gBlue)" stroke="#60A5FA" stroke-width="1.5"/>
+              <text x="88" y="24" text-anchor="middle" fill="#BFDBFE" font-size="9" font-weight="bold">shipping-agent</text>
+              <text x="88" y="44" text-anchor="middle" fill="#FFF" font-size="10" font-family="monospace">agent-ship@</text>
+              <text x="88" y="62" text-anchor="middle" fill="#DBEAFE" font-size="8.5">authorized view reader</text>
+              <text x="88" y="77" text-anchor="middle" fill="#DBEAFE" font-size="8.5">never the base table</text>
+            </g>
+            <g transform="translate(324,364)">
+              <rect width="176" height="86" rx="10" fill="url(#gBlue)" stroke="#60A5FA" stroke-width="1.5"/>
+              <text x="88" y="24" text-anchor="middle" fill="#BFDBFE" font-size="9" font-weight="bold">reconcile-agent</text>
+              <text x="88" y="44" text-anchor="middle" fill="#FFF" font-size="10" font-family="monospace">agent-reconcile@</text>
+              <text x="88" y="62" text-anchor="middle" fill="#DBEAFE" font-size="8.5">analytics dataset reader</text>
+              <text x="88" y="77" text-anchor="middle" fill="#DBEAFE" font-size="8.5">read-only by construction</text>
+            </g>
+
+            <!-- IAM boundary -->
+            <rect x="308" y="24" width="208" height="442" rx="14" fill="none" stroke="#10B981"
+                  stroke-width="1.5" stroke-dasharray="7,5"/>
+            <text x="412" y="16" text-anchor="middle" fill="#10B981" font-size="10" font-weight="bold">
+              LAYER 3 — per-agent IAM identity
+            </text>
+
+            <!-- allowed edges -->
+            <path d="M 500 83 L 700 83" stroke="#10B981" stroke-width="2.5" marker-end="url(#mGreen)"/>
+            <path d="M 500 191 L 700 191" stroke="#10B981" stroke-width="2.5" marker-end="url(#mGreen)"/>
+            <path d="M 500 299 L 700 299" stroke="#10B981" stroke-width="2.5" marker-end="url(#mGreen)"/>
+            <path d="M 500 407 L 700 407" stroke="#10B981" stroke-width="2.5" marker-end="url(#mGreen)"/>
+
+            <!-- denied edges into PHI -->
+            <path d="M 500 100 C 600 100, 620 470, 700 470" stroke="#EF4444" stroke-width="2.5"
+                  stroke-dasharray="6,5" fill="none" marker-end="url(#mRed)"/>
+            <path d="M 500 316 C 600 330, 620 470, 700 470" stroke="#EF4444" stroke-width="2.5"
+                  stroke-dasharray="6,5" fill="none" marker-end="url(#mRed)"/>
+
+            <!-- data stores -->
+            <g transform="translate(700,52)">
+              <rect width="180" height="62" rx="8" fill="url(#gData)" stroke="#38BDF8" stroke-width="1.5"/>
+              <text x="90" y="26" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">Firestore</text>
+              <text x="90" y="45" text-anchor="middle" fill="#BAE6FD" font-size="8.5">catalog · orders · clinics</text>
+            </g>
+            <g transform="translate(700,160)">
+              <rect width="180" height="62" rx="8" fill="url(#gData)" stroke="#38BDF8" stroke-width="1.5"/>
+              <text x="90" y="26" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">Pub/Sub</text>
+              <text x="90" y="45" text-anchor="middle" fill="#BAE6FD" font-size="8.5">order.verified · order.packed</text>
+            </g>
+            <g transform="translate(700,268)">
+              <rect width="180" height="62" rx="8" fill="url(#gData)" stroke="#38BDF8" stroke-width="1.5"/>
+              <text x="90" y="24" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">BigQuery view</text>
+              <text x="90" y="43" text-anchor="middle" fill="#BAE6FD" font-size="8.5">shipment_addresses</text>
+            </g>
+            <g transform="translate(700,376)">
+              <rect width="180" height="62" rx="8" fill="url(#gData)" stroke="#38BDF8" stroke-width="1.5"/>
+              <text x="90" y="24" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">BigQuery analytics</text>
+              <text x="90" y="43" text-anchor="middle" fill="#BAE6FD" font-size="8.5">lot_expiry_facts</text>
+            </g>
+
+            <!-- protected PHI -->
+            <g transform="translate(700,440)">
+              <rect width="180" height="62" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="2"/>
+              <text x="90" y="24" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">🔒 patient_shipments</text>
+              <text x="90" y="43" text-anchor="middle" fill="#FCA5A5" font-size="8.5">no agent holds access</text>
+            </g>
+
+            <text x="925" y="470" fill="#EF4444" font-size="10" font-weight="bold">403 PERMISSION_DENIED</text>
+            <text x="925" y="486" fill="#94A3B8" font-size="8.5">returned by Google Cloud IAM</text>
+
+            <!-- legend -->
+            <g transform="translate(925,60)">
+              <text x="0" y="0" fill="#94A3B8" font-size="10" font-weight="bold">LEGEND</text>
+              <line x1="0" y1="16" x2="26" y2="16" stroke="#10B981" stroke-width="2.5"/>
+              <text x="34" y="20" fill="#CBD5E1" font-size="9">granted by IAM</text>
+              <line x1="0" y1="38" x2="26" y2="38" stroke="#EF4444" stroke-width="2.5" stroke-dasharray="6,5"/>
+              <text x="34" y="42" fill="#CBD5E1" font-size="9">denied by IAM</text>
+            </g>
+          </svg>
+        </div>
+
+        <div style="margin-top:1.15rem; display:flex; gap:0.6rem; flex-wrap:wrap;">
+          <button class="btn-action ghost" onclick="openDiagramModal()">🖼️ Open original flow diagram</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== TAB: MODEL EVALS AND COST -->
+    <div class="view-content" id="tabEvals">
+      <div class="section-box">
+        <div class="section-header">
+          <div>
+            <h3>Measured Model Evals &amp; Routing Economics</h3>
+            <p id="evalMethodology">Every figure below is produced by <code>evals/run_eval.py</code> against live Vertex AI endpoints. Grading is deterministic — no model grades another model.</p>
+          </div>
+          <span class="prov-badge live">● Measured</span>
+        </div>
+        <div id="evalSummary"></div>
+        <div id="evalTables" style="margin-top:1.35rem;"></div>
+      </div>
+    </div>
+
+    <!-- ============================================================= TAB: RAG -->
+    <div class="view-content" id="tabRag">
+      <div class="section-box" style="border-color: rgba(59,130,246,0.3);">
+        <div class="section-header">
+          <div>
+            <h3>Retrieval-Augmented Grounding &amp; Memory</h3>
+            <p>Real Vertex AI embeddings over a chunked SOP corpus, exact cosine retrieval, and a Gemini answer constrained to the retrieved passages.</p>
+          </div>
+          <span class="prov-badge live">● Live GCP calls</span>
+        </div>
+
+        <div class="agent-card" style="background:var(--panel-sunk); border-left:3px solid var(--accent-blue); margin-bottom:1.2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.4rem;">
+            <strong style="color:var(--text-heading); font-size:0.9rem;">🧠 Google Cloud 3-Tier Agent Memory Architecture</strong>
+            <span class="status-pill green">Sub-Millisecond Working Memory</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-main); margin-bottom:0.6rem;">
+            GCP replaces standalone Redis memory layers with native <strong>Cloud Memorystore for Redis</strong> (working session context &amp; semantic cache) alongside <strong>Cloud Firestore</strong> (distributed state locks) and <strong>Vertex AI Vector Search</strong> (long-term semantic retrieval).
+          </p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0.6rem;">
+            <div style="background:var(--panel-navy); padding:0.6rem 0.75rem; border-radius:6px; border:1px solid var(--panel-border);">
+              <div style="font-weight:700; font-size:0.78rem; color:var(--accent-sky);">1. Short-Term / Working Memory</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem;"><strong>Cloud Memorystore for Redis</strong> · Sub-1ms agent-to-agent session state &amp; prompt semantic cache.</div>
+            </div>
+            <div style="background:var(--panel-navy); padding:0.6rem 0.75rem; border-radius:6px; border:1px solid var(--panel-border);">
+              <div style="font-weight:700; font-size:0.78rem; color:var(--accent-blue);">2. Transactional State Memory</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem;"><strong>Cloud Firestore</strong> · Persistent document state, order traces, and concurrency locks.</div>
+            </div>
+            <div style="background:var(--panel-navy); padding:0.6rem 0.75rem; border-radius:6px; border:1px solid var(--panel-border);">
+              <div style="font-weight:700; font-size:0.78rem; color:var(--status-green);">3. Long-Term Knowledge Memory</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem;"><strong>Vertex AI Vector Search</strong> · 768-dim embeddings over regulatory SOPs &amp; compliance corpus.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split-sidebar">
+          <div>
+            <h4 style="color:var(--text-heading); font-size:0.88rem; margin-bottom:0.7rem;">📄 Indexed corpus</h4>
+            <div id="corpusPanel"><div class="empty-note">Loading corpus…</div></div>
+          </div>
+
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="ragQueryInput">Grounding query</label>
+              <input type="text" id="ragQueryInput" class="form-input"
+                     value="What temperature range must Insulin Glargine be stored at?">
+            </div>
+            <div class="preset-row">
+              <button class="preset-btn" data-rag="What temperature range must Insulin Glargine be stored at?">Storage temperature</button>
+              <button class="preset-btn" data-rag="What happens to an order if the clinic's DEA registration has expired?">Expired DEA licence</button>
+              <button class="preset-btn" data-rag="How long can a temperature excursion last before quarantine?">Excursion window</button>
+              <button class="preset-btn" data-rag="What is Meridian's refund policy for opened vials?">Out-of-corpus (should decline)</button>
+            </div>
+            <button class="btn-action" id="ragSearchBtn">🔍 Run grounded query</button>
+            <div id="ragResults" style="margin-top:1.15rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== TAB: REGISTRY -->
+    <div class="view-content" id="tabRegistry">
+      <div class="section-box">
+        <div class="section-header">
+          <div>
+            <h3>Agent Microservice Registry</h3>
+            <p>Every agent, its dedicated service account, what that identity can reach, and what it is refused. Click an agent for its full reachability and audit detail.</p>
+          </div>
+          <span class="prov-badge live">● Served from backend</span>
+        </div>
+        <div class="card-grid" id="registryGrid"><div class="empty-note">Loading agents…</div></div>
+      </div>
+    </div>
+
+    <!-- ============================================================ TAB: LOGS -->
+    <div class="view-content" id="tabLogs">
+      <div class="section-box">
+        <div class="section-header">
+          <div>
+            <h3>Agent Execution Logs</h3>
+            <p>Per-agent execution trace with model, latency, and cost per call.</p>
+          </div>
+          <span class="prov-badge sim">Sample trace</span>
+        </div>
+        <div class="preset-row" id="logFilterRow"></div>
+        <div id="logsContainer"><div class="empty-note">Loading logs…</div></div>
+      </div>
+    </div>
+
+    <!-- ========================================================= TAB: BUILDER -->
+    <div class="view-content" id="tabBuilder">
+      <div class="section-box" style="border-color: var(--accent-gold);">
+        <div class="section-header">
+          <div>
+            <h3>Agent Provisioning Wizard</h3>
+            <p>
+              Composes the service account, IAM binding, and Cloud Run deployment a new agent
+              would need. This returns the provisioning plan — it does not create cloud
+              resources. The commands below are the real ones to run.
+            </p>
+          </div>
+          <span class="prov-badge sim">Plan only — creates nothing</span>
+        </div>
+
+        <div class="split-2">
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="builderAgentName">Agent name</label>
+              <input type="text" id="builderAgentName" class="form-input" value="anesthesia-cold-monitor">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="builderAgentRole">Responsibilities</label>
+              <textarea id="builderAgentRole" class="form-textarea" rows="3">Monitors controlled anesthesia inventory levels, checks refrigeration telemetry SLAs, and alerts clinical operations of expiring stock.</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="builderBaseModel">Base model</label>
+              <select id="builderBaseModel" class="form-select">
+                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite — cheapest tier</option>
+                <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash — balanced</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro — deepest reasoning</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="builderIamScope">Least-privilege IAM role</label>
+              <select id="builderIamScope" class="form-select">
+                <option value="roles/datastore.user">roles/datastore.user — Firestore only</option>
+                <option value="roles/bigquery.dataViewer">roles/bigquery.dataViewer — analytics reader</option>
+                <option value="roles/run.invoker">roles/run.invoker — invoke other services only</option>
+              </select>
+            </div>
+            <button class="btn-action gold" id="builderBtn">⚙️ Generate provisioning plan</button>
+          </div>
+          <div>
+            <label class="form-label">Provisioning plan</label>
+            <div class="code-block" id="builderOutput" style="min-height:220px;">Fill in the parameters and generate a plan.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================== TAB: CLOUD ARMOR -->
+    <div class="view-content" id="tabArmor">
+      <div class="section-box" style="border-color: rgba(148,163,184,0.35);">
+        <div class="section-header">
+          <div>
+            <h3>Cloud Armor Edge WAF</h3>
+            <p>
+              Models how an external HTTPS load balancer with Cloud Armor would classify
+              common edge attacks. No Cloud Armor policy or load balancer is deployed for this
+              demo, so these verdicts are illustrative rather than measured. The rule names and
+              response codes match what the real product returns.
+            </p>
+          </div>
+          <span class="prov-badge sim">Simulated — no policy deployed</span>
+        </div>
+
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-bottom:1.35rem;">
+          <div class="agent-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--text-heading)">Rule 100-sqli</strong>
+              <span class="status-pill grey">MODELLED</span>
+            </div>
+            <div class="kv">OWASP CRS v3.3 SQL injection inspection</div>
+          </div>
+          <div class="agent-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--text-heading)">Rule 101-xss</strong>
+              <span class="status-pill grey">MODELLED</span>
+            </div>
+            <div class="kv">OWASP CRS v3.3 cross-site scripting</div>
+          </div>
+          <div class="agent-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--text-heading)">Rule 200-ddos</strong>
+              <span class="status-pill grey">MODELLED</span>
+            </div>
+            <div class="kv">Rate limiting at 100 requests/minute</div>
+          </div>
+        </div>
+
+        <div class="preset-row">
+          <button class="btn-action red" data-armor="sqli">💥 SQL injection</button>
+          <button class="btn-action gold" data-armor="xss">💥 XSS payload</button>
+          <button class="btn-action" style="background:var(--status-purple)" data-armor="ddos">💥 Rate-limit flood</button>
+        </div>
+        <div id="armorResult"></div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<!-- agent detail modal -->
+<div class="modal-overlay" id="agentModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 style="font-size:1.05rem; color:var(--text-heading);" id="agentModalTitle">Agent</h3>
+      <button class="btn-action ghost" style="padding:0.3rem 0.7rem;" onclick="closeAgentModal()">✕</button>
+    </div>
+    <div class="modal-body" id="agentModalBody"></div>
+  </div>
+</div>
+
+<!-- original diagram modal -->
+<div class="modal-overlay" id="diagramModal">
+  <div class="modal-container" style="max-width:95vw; background:#1B2436;">
+    <div class="modal-header">
+      <h3 style="font-size:1.05rem; color:var(--text-heading);">Original architecture flow</h3>
+      <button class="btn-action ghost" style="padding:0.3rem 0.7rem;" onclick="closeDiagramModal()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <img src="gcp_agent_flow.jpg" alt="Google Cloud agent architecture flow" style="max-width:100%; max-height:78vh; border-radius:8px;">
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const state = { health: null, presets: [], agents: {}, activePreset: null, logs: [] };
+
+/* ------------------------------------------------------------------ helpers */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/** Fetch JSON, throwing on any non-2xx so callers surface a real error rather than
+ *  silently substituting placeholder content. */
+async function api(path, options = {}) {
+  const res = await fetch(path, options);
+  const text = await res.text();
+  let body;
+  try { body = JSON.parse(text); } catch { body = { raw: text }; }
+  if (!res.ok) {
+    const detail = body.message || body.error || body.detail || text.slice(0, 200);
+    throw new Error(`${res.status} ${res.statusText} — ${detail}`);
+  }
+  return body;
+}
+
+function apiPost(path, payload) {
+  return api(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload ?? {}),
+  });
+}
+
+function showError(container, err) {
+  container.innerHTML = `<div class="error-box">Request failed\n${esc(err.message)}</div>`;
+}
+
+function setBusy(button, busy, idleLabel) {
+  button.disabled = busy;
+  button.innerHTML = busy ? '<span class="spinner"></span> Running…' : idleLabel;
+}
+
+/* --------------------------------------------------------------------- tabs */
+$("navTabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".nav-item[data-tab]");
+  if (!btn) return;
+  document.querySelectorAll(".view-content").forEach((c) => c.classList.remove("active"));
+  document.querySelectorAll(".nav-item[data-tab]").forEach((b) => b.classList.remove("active"));
+  $(btn.dataset.tab).classList.add("active");
+  btn.classList.add("active");
+  $("sidebar").classList.remove("open");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  loadTab(btn.dataset.tab);
+});
+$("menuBtn").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+
+const loaded = new Set();
+function loadTab(tabId) {
+  if (loaded.has(tabId)) return;
+  loaded.add(tabId);
+  if (tabId === "tabEvals") loadEvals();
+  if (tabId === "tabRag") loadCorpus();
+  if (tabId === "tabRegistry") loadRegistry();
+  if (tabId === "tabLogs") loadLogs();
+}
+
+/** Identities are shown as they actually are. The containment result quotes Google's
+    own error text, which names the real project, so masking here only contradicted it. */
+function maskAccount(str) {
+  return String(str ?? "");
+}
+
+/* ------------------------------------------------------------------- health */
+async function loadHealth() {
+  try {
+    const h = await api("/api/health");
+    state.health = h;
+    $("healthPill").className = "health-pill";
+    $("healthText").textContent = `LIVE · ${h.region}`;
+    $("brandSubtitle").textContent = `${h.project_id} · ${h.models.flash_lite} → ${h.models.pro}`;
+  } catch (err) {
+    $("healthPill").className = "health-pill degraded";
+    $("healthText").textContent = "BACKEND UNREACHABLE";
+    $("brandSubtitle").textContent = "start dashboard_backend.py";
+  }
+}
+
+/* ------------------------------------------------------- containment console */
+async function loadPresets() {
+  try {
+    const data = await api("/api/security-test/presets");
+    state.presets = data.presets;
+    $("targetResource").textContent = maskAccount(data.target_resource);
+
+    $("presetRow").innerHTML = data.presets
+      .map((p, i) => `<button class="preset-btn${i === 0 ? " active" : ""}" data-preset="${i}">${esc(p.label)}</button>`)
+      .join("");
+
+    $("agentSelect").innerHTML = Object.entries(data.agents)
+      .map(([k, scope]) => `<option value="${esc(k)}" data-scope="${esc(scope)}">${esc(k)}</option>`)
+      .join("");
+
+    applyPreset(0);
+    updateAgentScope();
+  } catch (err) {
+    showError($("containmentResult"), err);
+  }
+}
+
+function applyPreset(index) {
+  const preset = state.presets[index];
+  if (!preset) return;
+  state.activePreset = index;
+  $("attackPrompt").value = preset.prompt;
+  $("presetNote").textContent = preset.note;
+  document.querySelectorAll("[data-preset]").forEach((b) =>
+    b.classList.toggle("active", Number(b.dataset.preset) === index));
+}
+
+function updateAgentScope() {
+  const opt = $("agentSelect").selectedOptions[0];
+  $("agentScopeNote").textContent = opt ? opt.dataset.scope : "";
+}
+
+$("presetRow").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-preset]");
+  if (btn) applyPreset(Number(btn.dataset.preset));
+});
+$("agentSelect").addEventListener("change", updateAgentScope);
+$("armorToggle").addEventListener("change", (e) => {
+  $("armorToggleNote").textContent = e.target.checked
+    ? "Enabled — prompts are screened before reaching an identity."
+    : "Disabled — the prompt reaches the agent identity. Only IAM is left.";
+});
+
+$("runAttackBtn").addEventListener("click", async () => {
+  const btn = $("runAttackBtn");
+  const target = $("containmentResult");
+  setBusy(btn, true);
+  target.innerHTML = '<div class="empty-note">Calling Model Armor, then querying BigQuery as the agent…</div>';
+
+  try {
+    const result = await apiPost("/api/security-test", {
+      agentKey: $("agentSelect").value,
+      prompt: $("attackPrompt").value,
+      modelArmorEnabled: $("armorToggle").checked,
+    });
+    renderContainment(result, target);
+  } catch (err) {
+    showError(target, err);
+  } finally {
+    setBusy(btn, false, "💥 Run containment test");
+  }
+});
+
+function renderContainment(r, target) {
+  const l2 = r.layer2;
+  const l3 = r.layer3;
+
+  const l2Class = !l2.enabled ? "skipped" : l2.outcome === "BLOCKED" ? "blocked" : "passed";
+  const l2Pill = !l2.enabled
+    ? '<span class="status-pill grey">DISABLED</span>'
+    : l2.outcome === "BLOCKED"
+      ? '<span class="status-pill red">BLOCKED</span>'
+      : '<span class="status-pill amber">PASSED THROUGH</span>';
+
+  const filters = (l2.matched_filters || []).map((f) =>
+    `<div class="kv">↳ <strong>${esc(f.filter)}</strong> · confidence ${esc(f.confidence)}</div>`).join("");
+
+  const modeNote = l2.mode === "HEURISTIC_FALLBACK"
+    ? `<div class="kv" style="color:var(--status-amber);">⚠ Live API unreachable — local keyword heuristic used. ${esc(l2.fallback_cause || "")}</div>`
+    : l2.mode === "LIVE_API"
+      ? `<div class="kv">Live Model Armor call · template <code>${esc(l2.template)}</code> · ${esc(l2.latency_ms)}ms</div>`
+      : "";
+
+  let l3Class = "skipped";
+  let l3Pill = '<span class="status-pill grey">NOT REACHED</span>';
+  if (l3.outcome === "DENIED") { l3Class = "denied"; l3Pill = '<span class="status-pill green">403 DENIED BY IAM</span>'; }
+  else if (l3.outcome === "ALLOWED") { l3Class = "allowed"; l3Pill = '<span class="status-pill red">QUERY SUCCEEDED</span>'; }
+  else if (l3.outcome === "ERROR") { l3Class = "passed"; l3Pill = '<span class="status-pill amber">ERROR</span>'; }
+
+  const contained = r.stopped_at === "LAYER_2_MODEL_ARMOR" || r.stopped_at === "LAYER_3_GCP_IAM";
+  const verdict = r.stopped_at === "LAYER_2_MODEL_ARMOR"
+    ? "Contained at Layer 2. Screening recognised the prompt and it never reached an identity."
+    : r.stopped_at === "LAYER_3_GCP_IAM"
+      ? (l2.enabled && l2.outcome === "PASSED"
+          ? "Contained at Layer 3. Screening did not flag this phrasing, and IAM refused the query anyway — which is the reason identity is the boundary that matters."
+          : "Contained at Layer 3. With screening off, IAM alone refused the query.")
+      : r.stopped_at === "NOTHING_STOPPED_IT"
+        ? "This identity was able to read the protected table. That is a real finding, not a simulation."
+        : "The test could not complete.";
+
+  target.innerHTML = `
+    <div class="layer-chain">
+      <div class="layer-card ${l2Class}">
+        <div class="layer-head"><h5>${esc(l2.layer)}</h5>${l2Pill}</div>
+        ${modeNote}
+        ${filters || '<div class="kv">No filter matched this prompt.</div>'}
+      </div>
+
+      <div class="layer-card ${l3Class}">
+        <div class="layer-head"><h5>${esc(l3.layer)}</h5>${l3Pill}</div>
+        <div class="kv">Ran as <span class="mono-sm">${esc(maskAccount(r.principal))}</span></div>
+        ${l3.latency_ms ? `<div class="kv">BigQuery round trip ${esc(l3.latency_ms)}ms</div>` : ""}
+        <div class="code-block" style="margin-top:0.6rem;">${esc(l3.detail)}</div>
+      </div>
+    </div>
+
+    <div class="verdict-banner ${contained ? "contained" : "breached"}">
+      ${contained ? "✅" : "🚨"} ${esc(verdict)}
+    </div>`;
+}
+
+/* ------------------------------------------------------------------- evals */
+async function loadEvals() {
+  const summary = $("evalSummary");
+  const tables = $("evalTables");
+  try {
+    const [evals, cost] = await Promise.all([api("/api/evals"), apiPost("/api/model-cost-analysis")]);
+
+    summary.innerHTML = `
+      <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+        <div class="agent-card">
+          <div class="form-label">All-Pro baseline</div>
+          <div style="font-size:1.5rem; font-weight:800; color:var(--text-heading);">$${cost.baseline_cost_per_1k_requests_usd.toFixed(4)}</div>
+          <div class="kv">per 1,000 requests across all workloads</div>
+        </div>
+        <div class="agent-card">
+          <div class="form-label">Cheapest tier that matches</div>
+          <div style="font-size:1.5rem; font-weight:800; color:var(--status-green);">$${cost.optimized_cost_per_1k_requests_usd.toFixed(4)}</div>
+          <div class="kv">same measured accuracy</div>
+        </div>
+        <div class="agent-card">
+          <div class="form-label">Cost reduction</div>
+          <div style="font-size:1.5rem; font-weight:800; color:var(--status-green);">${cost.total_saving_pct_vs_baseline}%</div>
+          <div class="kv">measured, not estimated</div>
+        </div>
+        <div class="agent-card">
+          <div class="form-label">Measured at</div>
+          <div style="font-size:1.05rem; font-weight:700; color:var(--text-heading);">${esc(evals.generated_at)}</div>
+          <div class="kv">pricing captured ${esc(evals.pricing_captured)}</div>
+        </div>
+      </div>
+      <div class="kv" style="margin-top:0.9rem;">
+        Grading: ${esc(evals.grading)}.
+        Thinking tokens bill at the output rate and are counted here.
+        <a href="${esc(evals.pricing_source)}" target="_blank" rel="noopener" style="color:var(--accent-sky);">Pricing source ↗</a>
+      </div>`;
+
+    tables.innerHTML = Object.entries(evals.tasks).map(([name, task]) => {
+      const rows = Object.entries(task.models)
+        .sort((a, b) => a[1].cost_per_1k_requests_usd - b[1].cost_per_1k_requests_usd);
+      const cheapestBest = rows.find(([, m]) =>
+        m.accuracy_pct >= Math.max(...rows.map(([, x]) => x.accuracy_pct)));
+
+      return `
+        <div style="margin-bottom:1.6rem;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.6rem;">
+            <h4 style="color:var(--text-heading); font-size:0.98rem;">${esc(task.description)}</h4>
+            <span class="kv">${task.cases} cases · <code>${esc(name)}</code></span>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead><tr>
+                <th>Model</th><th>Accuracy</th><th>p50 latency</th><th>Mean in/out tokens</th>
+                <th>Thinking tokens</th><th>Cost / 1k requests</th><th>Misses</th>
+              </tr></thead>
+              <tbody>
+                ${rows.map(([model, m]) => `
+                  <tr class="${cheapestBest && model === cheapestBest[0] ? "row-best" : ""}">
+                    <td><code>${esc(model)}</code>${cheapestBest && model === cheapestBest[0]
+                      ? ' <span class="status-pill green">SELECTED</span>' : ""}</td>
+                    <td><strong>${m.accuracy_pct}%</strong></td>
+                    <td>${m.p50_latency_ms ?? "—"} ms</td>
+                    <td>${m.mean_input_tokens} / ${m.mean_output_tokens}</td>
+                    <td>${m.mean_thinking_tokens}</td>
+                    <td><strong>$${m.cost_per_1k_requests_usd.toFixed(4)}</strong></td>
+                    <td>${m.failed_cases.length ? esc(m.failed_cases.join(", ")) : "—"}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }).join("");
+
+    if (Object.keys(cost.unmeasured_agents || {}).length) {
+      tables.innerHTML += `<div class="kv" style="margin-top:0.5rem;"><strong>Not evaluated:</strong> ` +
+        Object.entries(cost.unmeasured_agents)
+          .map(([a, why]) => `<code>${esc(a)}</code> — ${esc(why)}`).join("; ") + `</div>`;
+    }
+  } catch (err) {
+    summary.innerHTML = "";
+    showError(tables, err);
+  }
+}
+
+/* --------------------------------------------------------------------- RAG */
+async function loadCorpus() {
+  const panel = $("corpusPanel");
+  try {
+    const c = await api("/api/rag/corpus");
+    panel.innerHTML = c.documents.map((d) => `
+      <div class="agent-card" style="margin-bottom:0.7rem;">
+        <div style="font-weight:700; font-size:0.83rem; color:var(--text-heading);">${esc(d.title)}</div>
+        <div class="kv">${d.chunks} chunks indexed</div>
+        <span class="status-pill green">${c.embedding_dimensions}-dim vectors</span>
+      </div>`).join("") +
+      `<div class="kv" style="margin-top:0.5rem;">${c.total_chunks} chunks · <code>${esc(c.embedding_model)}</code></div>`;
+  } catch (err) {
+    showError(panel, err);
+  }
+}
+
+document.querySelectorAll("[data-rag]").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    $("ragQueryInput").value = btn.dataset.rag;
+    runRag();
+  }));
+$("ragSearchBtn").addEventListener("click", runRag);
+
+async function runRag() {
+  const btn = $("ragSearchBtn");
+  const target = $("ragResults");
+  setBusy(btn, true);
+  target.innerHTML = '<div class="empty-note">Embedding query and searching the index…</div>';
+  try {
+    const r = await apiPost("/api/rag/search", { query: $("ragQueryInput").value });
+    target.innerHTML = `
+      <div class="form-label" style="color:var(--status-green);">Grounded answer</div>
+      <div class="code-block" style="color:var(--text-heading); font-family:var(--font-sans); font-size:0.88rem;">${esc(r.grounded_answer)}</div>
+      <div class="kv" style="margin:0.7rem 0;">
+        <code>${esc(r.embedding_model)}</code> · ${r.embedding_dimensions}-dim ·
+        ${esc(r.retrieval)} · ${r.latency_ms}ms ·
+        ${r.prompt_tokens}in/${r.output_tokens}out tokens · answered by <code>${esc(r.grounding_model)}</code>
+      </div>
+      <div class="form-label">Retrieved passages (cosine similarity)</div>
+      ${r.retrieved_chunks.map((c, i) => `
+        <div class="agent-card" style="margin-bottom:0.55rem;">
+          <div style="display:flex; justify-content:space-between; gap:0.6rem; flex-wrap:wrap;">
+            <span class="mono-sm">[${i + 1}] ${esc(c.section)}</span>
+            <span class="status-pill ${c.score > 0.7 ? "green" : c.score > 0.55 ? "amber" : "grey"}">${c.score}</span>
+          </div>
+          <div class="kv" style="color:var(--text-dim);">${esc(c.document_title)}</div>
+          <div class="kv">${esc(c.text)}</div>
+        </div>`).join("")}`;
+  } catch (err) {
+    showError(target, err);
+  } finally {
+    setBusy(btn, false, "🔍 Run grounded query");
+  }
+}
+
+/* ---------------------------------------------------------------- registry */
+async function loadRegistry() {
+  const grid = $("registryGrid");
+  try {
+    const agents = await api("/api/agents");
+    state.agents = agents;
+    grid.innerHTML = Object.values(agents).map((a) => {
+      const allowed = a.reachableEndpoints.filter((e) => e.statusClass === "endpoint-allowed").length;
+      const refused = a.reachableEndpoints.filter((e) => e.statusClass === "endpoint-refused").length;
+      const costPill = a.costEstimate
+        ? `<span class="status-pill amber" style="font-size:0.68rem;">${esc(a.costEstimate.costPer1kOps)}/1k</span>`
+        : `<span class="status-pill grey" style="font-size:0.68rem;" title="${esc(a.costNote || "")}">not measured</span>`;
+      return `
+        <div class="agent-card" style="display:flex; flex-direction:column; justify-content:space-between; background:var(--panel-navy); border:1px solid var(--panel-border); border-radius:10px; padding:1.15rem; box-shadow:var(--shadow-sm);">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; margin-bottom:0.35rem;">
+              <h4 style="font-size:1.02rem; color:var(--text-heading); font-weight:700;">${esc(a.title)}</h4>
+              ${costPill}
+            </div>
+            <div class="mono-sm" style="font-size:0.73rem; margin-bottom:0.7rem; color:var(--accent-sky);">${esc(maskAccount(a.runtimeLogin))}</div>
+
+            <div style="background:var(--panel-sunk); padding:0.65rem 0.8rem; border-radius:7px; border:1px solid var(--panel-border); margin-bottom:0.8rem;">
+              <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:0.2rem;">Blast Radius Scope</div>
+              <div style="font-size:0.8rem; color:var(--text-main); line-height:1.35;">${esc(a.architecture.blastRadius)}</div>
+            </div>
+
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.9rem;">
+              <span class="status-pill green">✓ ${allowed} reachable</span>
+              ${refused ? `<span class="status-pill red">⊘ ${refused} refused</span>` : ""}
+              <span class="status-pill grey">${esc(a.owner)}</span>
+            </div>
+          </div>
+
+          <button class="btn-action ghost" data-agent="${esc(a.id)}" style="width:100%; justify-content:center; padding:0.55rem 0.8rem; font-size:0.82rem;">
+            🔍 Inspect Identity &amp; Blast Radius →
+          </button>
+        </div>`;
+    }).join("");
+  } catch (err) {
+    showError(grid, err);
+  }
+}
+
+$("registryGrid").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-agent]");
+  if (btn) openAgentModal(btn.dataset.agent);
+});
+
+function openAgentModal(agentId) {
+  const a = state.agents[agentId];
+  if (!a) return;
+  const cost = a.costEstimate;
+
+  $("agentModalTitle").textContent = a.title;
+  $("agentModalBody").innerHTML = `
+    <div class="agent-card" style="background:var(--panel-sunk); margin-bottom:1.15rem; border-left:3px solid var(--accent-blue);">
+      ${cost ? `
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:0.5rem; flex-wrap:wrap;">
+        <strong style="font-size:1.1rem; color:var(--text-heading);">${esc(cost.costPer1kOps)} <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted);">/ 1k requests</span></strong>
+        <span class="status-pill green">${esc(cost.efficiency)}</span>
+      </div>
+      <div class="kv"><strong>Routed model:</strong> ${esc(cost.modelTier)}</div>
+      <div class="kv"><strong>At 100k requests:</strong> ${esc(cost.monthlyEstimate)}</div>
+      <div class="kv"><strong>Evidence:</strong> ${esc(cost.tokenEconomics)}</div>`
+      : `<div class="kv">Cost not measured. ${esc(a.costNote || "")}</div>`}
+    </div>
+
+    <div class="kv" style="margin-bottom:0.9rem;">
+      <strong>Identity</strong><div class="mono-sm">${esc(maskAccount(a.runtimeLogin))}</div>
+    </div>
+    <div class="kv" style="margin-bottom:1.15rem;">${esc(a.architecture.blastDesc)}</div>
+
+    <div class="form-label">Reachable endpoints</div>
+    ${a.reachableEndpoints.map((e) => `
+      <div class="agent-card" style="margin-bottom:0.55rem;">
+        <div style="display:flex; justify-content:space-between; gap:0.6rem; flex-wrap:wrap;">
+          <strong style="color:var(--text-heading); font-size:0.85rem;">${esc(e.name)}</strong>
+          <span class="status-pill ${e.statusClass === "endpoint-allowed" ? "green" : "red"}">${esc(e.status)}</span>
+        </div>
+        <div class="mono-sm">${esc(maskAccount(e.uri))}</div>
+        <div class="kv">${esc(e.permission)}</div>
+        <div class="kv" style="color:var(--text-dim);">${esc(e.purpose)}</div>
+      </div>`).join("")}
+
+    <div class="form-label" style="margin-top:1.15rem;">IAM grants</div>
+    ${a.accountsAccess.map((acc) => `
+      <div class="agent-card" style="margin-bottom:0.55rem;">
+        <div class="mono-sm">${esc(maskAccount(acc.account))}</div>
+        <div class="kv">${esc(acc.role)} · ${esc(acc.policy)}</div>
+      </div>`).join("")}
+
+    <div class="form-label" style="margin-top:1.15rem;">Sample audit record</div>
+    ${a.auditLogs.map((log) => `
+      <div class="agent-card">
+        <strong style="color:var(--text-heading); font-size:0.85rem;">${esc(log.title)}</strong>
+        <div class="code-block">${log.details.map((d) => `${esc(d.label)}: ${esc(maskAccount(d.val))}`).join("\n")}</div>
+      </div>`).join("")}
+
+    <div style="margin-top:1.15rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      ${a.gcpLinks.cloudRun ? `<a class="btn-action ghost" href="${esc(a.gcpLinks.cloudRun)}" target="_blank" rel="noopener">Cloud Run ↗</a>` : ""}
+      <a class="btn-action ghost" href="${esc(a.gcpLinks.logs)}" target="_blank" rel="noopener">Logs ↗</a>
+      <a class="btn-action ghost" href="${esc(a.gcpLinks.registry)}" target="_blank" rel="noopener">Service accounts ↗</a>
+    </div>`;
+  $("agentModal").classList.add("active");
+}
+function closeAgentModal() { $("agentModal").classList.remove("active"); }
+
+/* -------------------------------------------------------------------- logs */
+async function loadLogs() {
+  const container = $("logsContainer");
+  try {
+    const data = await api("/api/agent-logs");
+    state.logs = data.logs;
+    const agents = [...new Set(data.logs.map((l) => l.agent_id))];
+    $("logFilterRow").innerHTML =
+      `<button class="preset-btn active" data-log="all">All agents</button>` +
+      agents.map((a) => `<button class="preset-btn" data-log="${esc(a)}">${esc(a)}</button>`).join("");
+    renderLogs("all");
+  } catch (err) {
+    showError(container, err);
+  }
+}
+
+$("logFilterRow").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-log]");
+  if (!btn) return;
+  document.querySelectorAll("[data-log]").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderLogs(btn.dataset.log);
+});
+
+function renderLogs(filter) {
+  const logs = filter === "all" ? state.logs : state.logs.filter((l) => l.agent_id === filter);
+  $("logsContainer").innerHTML = logs.map((log) => `
+    <div class="agent-card" style="margin-bottom:0.7rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+        <div>
+          <strong style="color:var(--text-heading)">${esc(log.agent_name)}</strong>
+          <span class="mono-sm"> (${esc(log.agent_id)})</span>
+        </div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <span class="status-pill grey">${esc(log.model)}</span>
+          <span class="status-pill amber">${esc(log.latency)}</span>
+          <span class="status-pill green">${esc(log.cost)}</span>
+        </div>
+      </div>
+      <div class="kv">Query: “${esc(log.query)}”</div>
+      <div class="code-block">${esc(log.resolution)}</div>
+      <div class="kv" style="color:var(--text-dim);">Model Armor: ${esc(log.model_armor_status)} · sink ${esc(log.bq_sink_id)}</div>
+    </div>`).join("");
+}
+
+/* ----------------------------------------------------------------- builder */
+$("builderBtn").addEventListener("click", async () => {
+  const btn = $("builderBtn");
+  const out = $("builderOutput");
+  setBusy(btn, true);
+  try {
+    const r = await apiPost("/api/agent-builder/create", {
+      agent_name: $("builderAgentName").value,
+      role_desc: $("builderAgentRole").value,
+      base_model: $("builderBaseModel").value,
+      iam_scope: $("builderIamScope").value,
+    });
+    out.textContent = [
+      `Plan for: ${r.agent_title}`,
+      `Identity:  ${r.service_account}`,
+      `Model:     ${r.base_model}`,
+      "",
+      "Steps this plan describes:",
+      ...r.provisioning_steps.map((s) => `  ${s}`),
+      "",
+      "Commands to actually create it:",
+      ...r.gcloud_commands.map((c) => `  $ ${c}`),
+    ].join("\n");
+  } catch (err) {
+    out.innerHTML = `<span style="color:#FCA5A5">Request failed\n${esc(err.message)}</span>`;
+  } finally {
+    setBusy(btn, false, "⚙️ Generate provisioning plan");
+  }
+});
+
+/* ------------------------------------------------------------- cloud armor */
+document.querySelectorAll("[data-armor]").forEach((btn) =>
+  btn.addEventListener("click", async () => {
+    const target = $("armorResult");
+    target.innerHTML = '<div class="empty-note">Evaluating modelled WAF rules…</div>';
+    try {
+      const r = await apiPost("/api/cloud-armor/test", { test_type: btn.dataset.armor });
+      target.innerHTML = `
+        <div class="layer-card ${r.http_code === 403 ? "denied" : "allowed"}">
+          <div class="layer-head">
+            <h5>${esc(r.cloud_armor_rule)}</h5>
+            <span class="status-pill ${r.http_code === 403 ? "green" : "red"}">${r.http_code} ${esc(r.status)}</span>
+          </div>
+          <div class="kv">${esc(r.detail)}</div>
+          <div class="code-block" style="margin-top:0.5rem;">payload inspected: ${esc(r.payload_inspected)}
+edge: ${esc(r.edge_location)}
+load balancer: ${esc(r.load_balancer)}</div>
+          <div class="kv" style="color:var(--status-amber); margin-top:0.5rem;">
+            ⚠ Modelled verdict — no Cloud Armor policy is deployed for this demo.
+          </div>
+        </div>`;
+    } catch (err) {
+      showError(target, err);
+    }
+  }));
+
+/* ------------------------------------------------------------------ modals */
+function openDiagramModal() { $("diagramModal").classList.add("active"); }
+function closeDiagramModal() { $("diagramModal").classList.remove("active"); }
+
+document.querySelectorAll(".modal-overlay").forEach((overlay) =>
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.classList.remove("active");
+  }));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") document.querySelectorAll(".modal-overlay").forEach((o) => o.classList.remove("active"));
+});
+
+/* -------------------------------------------------------------------- boot */
+loadHealth();
+loadPresets();
+loaded.add("tabContainment");
+</script>
+</body>
+</html>
