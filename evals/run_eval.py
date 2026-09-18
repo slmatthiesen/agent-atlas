@@ -16,10 +16,12 @@ import urllib.request
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 
 from gcp_auth import PROJECT_ID, REGION, get_access_token  # noqa: E402
+from compare import compare, format_report  # noqa: E402
 from rag_engine import thinking_budget_for  # noqa: E402
 from dataset import CATALOG, CLINICS, INTENT_EXTRACTION, LICENSE_GATE, RAG_GROUNDING  # noqa: E402
 
 RESULTS_DIR = pathlib.Path(__file__).parent / "results"
+BASELINE_PATH = pathlib.Path(__file__).parent / "baseline.json"
 VERTEX_BASE = (
     f"https://{REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}"
     f"/locations/{REGION}/publishers/google/models"
@@ -249,20 +251,16 @@ def summarize(model: str, records: list[dict]) -> dict:
     }
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Meridian model eval suite.")
-    parser.add_argument("--models", nargs="*", default=MODELS)
-    parser.add_argument("--tasks", nargs="*", default=list(TASKS))
-    args = parser.parse_args()
-
+def build_payload(models: list[str], tasks: list[str]) -> dict:
+    """Run the suite and return the result payload (also what --from-results loads)."""
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     results: dict[str, dict] = {}
 
-    for task_name in args.tasks:
+    for task_name in tasks:
         runner, case_count, description = TASKS[task_name]
         results[task_name] = {"description": description, "cases": case_count, "models": {}}
         print(f"\n=== {task_name} ({case_count} cases) ===")
-        for model in args.models:
+        for model in models:
             records = runner(model)
             summary = summarize(model, records)
             results[task_name]["models"][model] = {**summary, "records": records}
@@ -271,7 +269,7 @@ def main() -> None:
                   f"${summary['cost_per_1k_requests_usd']:.4f}/1k req"
                   + (f"  misses: {','.join(summary['failed_cases'])}" if summary["failed_cases"] else ""))
 
-    payload = {
+    return {
         "generated_at": started_at,
         "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "project_id": PROJECT_ID,
@@ -280,12 +278,58 @@ def main() -> None:
         "pricing_source": PRICING_SOURCE,
         "pricing_captured": PRICING_CAPTURED,
         "grading": "deterministic (exact field match / required substrings) — no LLM judge",
-        "thinking_budgets": {m: thinking_budget_for(m) for m in args.models},
+        "thinking_budgets": {m: thinking_budget_for(m) for m in models},
         "tasks": results,
     }
-    RESULTS_DIR.mkdir(exist_ok=True)
-    (RESULTS_DIR / "latest.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"\nWrote {RESULTS_DIR / 'latest.json'}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run the Meridian model eval suite.")
+    parser.add_argument("--models", nargs="*", default=MODELS)
+    parser.add_argument("--tasks", nargs="*", default=list(TASKS))
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Compare against evals/baseline.json and exit 1 on any regression.",
+    )
+    parser.add_argument(
+        "--promote",
+        action="store_true",
+        help="Bless this run as the new baseline. Commit the diff — that is the record "
+             "of a behavior change someone approved on purpose.",
+    )
+    parser.add_argument(
+        "--from-results",
+        metavar="PATH",
+        help="Grade a stored payload instead of calling the API. Costs nothing, and lets "
+             "CI check a run it already paid for.",
+    )
+    args = parser.parse_args()
+
+    if args.from_results:
+        payload = json.loads(pathlib.Path(args.from_results).read_text(encoding="utf-8"))
+        print(f"Loaded {args.from_results} (no API calls)")
+    else:
+        payload = build_payload(args.models, args.tasks)
+        RESULTS_DIR.mkdir(exist_ok=True)
+        (RESULTS_DIR / "latest.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        print(f"\nWrote {RESULTS_DIR / 'latest.json'}")
+
+    if args.promote:
+        blessed = {**payload, "blessed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+        BASELINE_PATH.write_text(json.dumps(blessed, indent=2), encoding="utf-8")
+        print(f"Blessed {BASELINE_PATH} — commit it so the change stays reviewable.")
+        return
+
+    if args.check:
+        if not BASELINE_PATH.exists():
+            print(f"\nNo baseline at {BASELINE_PATH}. Create one with --promote.")
+            sys.exit(2)
+        baseline = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
+        comparison = compare(baseline, payload)
+        print()
+        print(format_report(comparison, baseline.get("blessed_at")))
+        sys.exit(1 if comparison.failed else 0)
 
 
 if __name__ == "__main__":

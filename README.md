@@ -61,6 +61,33 @@ You can use these files as a reference architecture for:
 - Routing agent prompts through Google Cloud Model Armor.
 - Benchmarking model latency and cost (`evals/run_eval.py`).
 
+## 🚦 Evals as a gate, not a report card
+
+`evals/run_eval.py` grades a golden set deterministically — exact field match and
+required substrings, no LLM judge — across intent extraction, license gating and RAG
+grounding. `evals/baseline.json` is the blessed run, committed, so behavior has a
+recorded past to be compared against.
+
+```bash
+python evals/run_eval.py                              # measure: all tiers, writes results/latest.json
+python evals/run_eval.py --models gemini-2.5-flash-lite --check   # gate: exit 1 on regression
+python evals/run_eval.py --promote                    # bless a new baseline (commit the diff)
+```
+
+`--check` is a set difference on case IDs, not a delta on an accuracy score. With 26
+cases, one flipping pass→fail while another flips fail→pass leaves accuracy identical:
+a real regression under a green number. Cost and latency are graded too, because a
+prompt change that holds accuracy and doubles spend is also a regression.
+
+`--promote` exists so that accepting a behavior change is a reviewable commit rather
+than a deleted check. That is usually the difference between an eval suite that lasts
+and one that gets switched off in its second month.
+
+The comparator (`evals/compare.py`) is pure — no network, no clock — so `evals/test_compare.py`
+verifies the gate's own logic offline, for free. CI runs those tests on every PR and the
+live gate on the cheapest tier only; the full multi-tier sweep stays manual, for choosing
+a model rather than defending one.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

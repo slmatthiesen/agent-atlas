@@ -1,0 +1,985 @@
+{
+  "generated_at": "2026-09-15T21:34:38Z",
+  "completed_at": "2026-09-15T21:36:10Z",
+  "project_id": "gcp-agent-panel",
+  "region": "us-central1",
+  "pricing_usd_per_1m_tokens": {
+    "gemini-2.5-flash-lite": {
+      "input": 0.1,
+      "output": 0.4
+    },
+    "gemini-2.5-flash": {
+      "input": 0.3,
+      "output": 2.5
+    },
+    "gemini-2.5-pro": {
+      "input": 1.25,
+      "output": 10.0
+    }
+  },
+  "pricing_source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+  "pricing_captured": "2026-08-13",
+  "grading": "deterministic (exact field match / required substrings) \u2014 no LLM judge",
+  "thinking_budgets": {
+    "gemini-2.5-flash-lite": 0,
+    "gemini-2.5-flash": 0,
+    "gemini-2.5-pro": 128
+  },
+  "tasks": {
+    "intent_extraction": {
+      "description": "Spoken order to structured intent (voice-frontdoor)",
+      "cases": 12,
+      "models": {
+        "gemini-2.5-flash-lite": {
+          "cases": 12,
+          "passed": 12,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 648.9,
+          "p95_latency_ms": 854.5,
+          "mean_input_tokens": 231.6,
+          "mean_output_tokens": 43.7,
+          "mean_thinking_tokens": 0.0,
+          "cost_per_1k_requests_usd": 0.0406,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "intent-01",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 10}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 10\n}",
+              "latency_ms": 963.7,
+              "input_tokens": 237,
+              "output_tokens": 44,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-02",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 25}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 25\n}",
+              "latency_ms": 756.7,
+              "input_tokens": 230,
+              "output_tokens": 45,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-03",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 5}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 5\n}",
+              "latency_ms": 854.5,
+              "input_tokens": 233,
+              "output_tokens": 42,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-04",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 12}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 12\n}",
+              "latency_ms": 759.4,
+              "input_tokens": 237,
+              "output_tokens": 44,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-05",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 30}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 30\n}",
+              "latency_ms": 606.7,
+              "input_tokens": 227,
+              "output_tokens": 45,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-06",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 1}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 1\n}",
+              "latency_ms": 594.5,
+              "input_tokens": 224,
+              "output_tokens": 42,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-07",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 8}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 8\n}",
+              "latency_ms": 530.1,
+              "input_tokens": 235,
+              "output_tokens": 43,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-08",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 18}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 18\n}",
+              "latency_ms": 539.9,
+              "input_tokens": 237,
+              "output_tokens": 45,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-09",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 40}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 40\n}",
+              "latency_ms": 595.3,
+              "input_tokens": 227,
+              "output_tokens": 43,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-10",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 6}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 6\n}",
+              "latency_ms": 691.1,
+              "input_tokens": 229,
+              "output_tokens": 43,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-11",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 3}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 3\n}",
+              "latency_ms": 753.8,
+              "input_tokens": 232,
+              "output_tokens": 44,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-12",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 100}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 100\n}",
+              "latency_ms": 594.1,
+              "input_tokens": 231,
+              "output_tokens": 44,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            }
+          ]
+        },
+        "gemini-2.5-flash": {
+          "cases": 12,
+          "passed": 12,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 784.9,
+          "p95_latency_ms": 924.4,
+          "mean_input_tokens": 231.6,
+          "mean_output_tokens": 35.7,
+          "mean_thinking_tokens": 0.0,
+          "cost_per_1k_requests_usd": 0.1586,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "intent-01",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 10}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 10}",
+              "latency_ms": 779.6,
+              "input_tokens": 237,
+              "output_tokens": 36,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-02",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 25}",
+              "text": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 25}",
+              "latency_ms": 621.6,
+              "input_tokens": 230,
+              "output_tokens": 37,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-03",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 5}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 5}",
+              "latency_ms": 918.1,
+              "input_tokens": 233,
+              "output_tokens": 34,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-04",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 12}",
+              "text": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 12}",
+              "latency_ms": 887.3,
+              "input_tokens": 237,
+              "output_tokens": 36,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-05",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 30}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 30}",
+              "latency_ms": 674.0,
+              "input_tokens": 227,
+              "output_tokens": 37,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-06",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 1}",
+              "text": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 1}",
+              "latency_ms": 739.6,
+              "input_tokens": 224,
+              "output_tokens": 34,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-07",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 8}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 8}",
+              "latency_ms": 555.6,
+              "input_tokens": 235,
+              "output_tokens": 35,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-08",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 18}",
+              "text": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 18}",
+              "latency_ms": 919.0,
+              "input_tokens": 237,
+              "output_tokens": 37,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-09",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 40}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 40}",
+              "latency_ms": 694.4,
+              "input_tokens": 227,
+              "output_tokens": 35,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-10",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 6}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 6}",
+              "latency_ms": 790.1,
+              "input_tokens": 229,
+              "output_tokens": 35,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-11",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 3}",
+              "text": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 3}",
+              "latency_ms": 924.4,
+              "input_tokens": 232,
+              "output_tokens": 36,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-12",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 100}",
+              "text": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 100}",
+              "latency_ms": 969.0,
+              "input_tokens": 231,
+              "output_tokens": 36,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            }
+          ]
+        },
+        "gemini-2.5-pro": {
+          "cases": 12,
+          "passed": 12,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 1866.2,
+          "p95_latency_ms": 2077.8,
+          "mean_input_tokens": 231.6,
+          "mean_output_tokens": 43.7,
+          "mean_thinking_tokens": 62.0,
+          "cost_per_1k_requests_usd": 1.3461,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "intent-01",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 10}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 10\n}",
+              "latency_ms": 2240.6,
+              "input_tokens": 237,
+              "output_tokens": 44,
+              "thinking_tokens": 68,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-02",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 25}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 25\n}",
+              "latency_ms": 1860.8,
+              "input_tokens": 230,
+              "output_tokens": 45,
+              "thinking_tokens": 60,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-03",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 5}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 5\n}",
+              "latency_ms": 1711.9,
+              "input_tokens": 233,
+              "output_tokens": 42,
+              "thinking_tokens": 60,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-04",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 12}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 12\n}",
+              "latency_ms": 1928.6,
+              "input_tokens": 237,
+              "output_tokens": 44,
+              "thinking_tokens": 71,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-05",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 30}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 30\n}",
+              "latency_ms": 1717.6,
+              "input_tokens": 227,
+              "output_tokens": 45,
+              "thinking_tokens": 54,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-06",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 1}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 1\n}",
+              "latency_ms": 1711.5,
+              "input_tokens": 224,
+              "output_tokens": 42,
+              "thinking_tokens": 58,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-07",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 8}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 8\n}",
+              "latency_ms": 2077.8,
+              "input_tokens": 235,
+              "output_tokens": 43,
+              "thinking_tokens": 66,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-08",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 18}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 18\n}",
+              "latency_ms": 1811.0,
+              "input_tokens": 237,
+              "output_tokens": 45,
+              "thinking_tokens": 54,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-09",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 40}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 40\n}",
+              "latency_ms": 1821.0,
+              "input_tokens": 227,
+              "output_tokens": 43,
+              "thinking_tokens": 72,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-10",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-INSULIN-01\", \"quantity\": 6}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-INSULIN-01\",\n  \"quantity\": 6\n}",
+              "latency_ms": 1886.7,
+              "input_tokens": 229,
+              "output_tokens": 43,
+              "thinking_tokens": 63,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-11",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-9021\", \"sku\": \"SKU-ANESTHETIC-03\", \"quantity\": 3}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-9021\",\n  \"sku\": \"SKU-ANESTHETIC-03\",\n  \"quantity\": 3\n}",
+              "latency_ms": 2063.4,
+              "input_tokens": 232,
+              "output_tokens": 44,
+              "thinking_tokens": 50,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "intent-12",
+              "passed": true,
+              "detail": "{\"clinic_id\": \"CLINIC-4471\", \"sku\": \"SKU-SALINE-02\", \"quantity\": 100}",
+              "text": "{\n  \"clinic_id\": \"CLINIC-4471\",\n  \"sku\": \"SKU-SALINE-02\",\n  \"quantity\": 100\n}",
+              "latency_ms": 1871.5,
+              "input_tokens": 231,
+              "output_tokens": 44,
+              "thinking_tokens": 68,
+              "finish_reason": "STOP"
+            }
+          ]
+        }
+      }
+    },
+    "license_gate": {
+      "description": "Restricted-product license decision (verification-agent)",
+      "cases": 6,
+      "models": {
+        "gemini-2.5-flash-lite": {
+          "cases": 6,
+          "passed": 6,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 510.5,
+          "p95_latency_ms": 553.2,
+          "mean_input_tokens": 130.3,
+          "mean_output_tokens": 12.0,
+          "mean_thinking_tokens": 0.0,
+          "cost_per_1k_requests_usd": 0.0178,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "gate-01",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n  \"decision\": \"APPROVE\"\n}",
+              "latency_ms": 485.7,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-02",
+              "passed": true,
+              "detail": "REJECT",
+              "text": "{\n  \"decision\": \"REJECT\"\n}",
+              "latency_ms": 431.1,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-03",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n  \"decision\": \"APPROVE\"\n}",
+              "latency_ms": 553.2,
+              "input_tokens": 127,
+              "output_tokens": 12,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-04",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n  \"decision\": \"APPROVE\"\n}",
+              "latency_ms": 535.4,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-05",
+              "passed": true,
+              "detail": "REJECT",
+              "text": "{\n  \"decision\": \"REJECT\"\n}",
+              "latency_ms": 477.6,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-06",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n  \"decision\": \"APPROVE\"\n}",
+              "latency_ms": 677.6,
+              "input_tokens": 127,
+              "output_tokens": 12,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            }
+          ]
+        },
+        "gemini-2.5-flash": {
+          "cases": 6,
+          "passed": 6,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 638.0,
+          "p95_latency_ms": 762.1,
+          "mean_input_tokens": 130.3,
+          "mean_output_tokens": 7.0,
+          "mean_thinking_tokens": 0.0,
+          "cost_per_1k_requests_usd": 0.0566,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "gate-01",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\"decision\": \"APPROVE\"}",
+              "latency_ms": 610.0,
+              "input_tokens": 132,
+              "output_tokens": 7,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-02",
+              "passed": true,
+              "detail": "REJECT",
+              "text": "{\"decision\": \"REJECT\"}",
+              "latency_ms": 459.6,
+              "input_tokens": 132,
+              "output_tokens": 7,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-03",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\"decision\": \"APPROVE\"}",
+              "latency_ms": 762.1,
+              "input_tokens": 127,
+              "output_tokens": 7,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-04",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\"decision\": \"APPROVE\"}",
+              "latency_ms": 595.8,
+              "input_tokens": 132,
+              "output_tokens": 7,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-05",
+              "passed": true,
+              "detail": "REJECT",
+              "text": "{\"decision\": \"REJECT\"}",
+              "latency_ms": 665.9,
+              "input_tokens": 132,
+              "output_tokens": 7,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-06",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\"decision\": \"APPROVE\"}",
+              "latency_ms": 844.9,
+              "input_tokens": 127,
+              "output_tokens": 7,
+              "thinking_tokens": 0,
+              "finish_reason": "STOP"
+            }
+          ]
+        },
+        "gemini-2.5-pro": {
+          "cases": 6,
+          "passed": 6,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 1754.9,
+          "p95_latency_ms": 1985.5,
+          "mean_input_tokens": 130.3,
+          "mean_output_tokens": 10.8,
+          "mean_thinking_tokens": 68.7,
+          "cost_per_1k_requests_usd": 0.9579,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "gate-01",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n  \"decision\": \"APPROVE\"\n}",
+              "latency_ms": 1431.9,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 50,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-02",
+              "passed": true,
+              "detail": "REJECT",
+              "text": "{\n  \"decision\": \"REJECT\"\n}",
+              "latency_ms": 1700.3,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 69,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-03",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n\"decision\": \"APPROVE\"\n}",
+              "latency_ms": 1985.5,
+              "input_tokens": 127,
+              "output_tokens": 11,
+              "thinking_tokens": 97,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-04",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\"decision\":\"APPROVE\"}",
+              "latency_ms": 3007.7,
+              "input_tokens": 132,
+              "output_tokens": 6,
+              "thinking_tokens": 64,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-05",
+              "passed": true,
+              "detail": "REJECT",
+              "text": "{\n  \"decision\": \"REJECT\"\n}",
+              "latency_ms": 1809.5,
+              "input_tokens": 132,
+              "output_tokens": 12,
+              "thinking_tokens": 65,
+              "finish_reason": "STOP"
+            },
+            {
+              "case_id": "gate-06",
+              "passed": true,
+              "detail": "APPROVE",
+              "text": "{\n  \"decision\": \"APPROVE\"\n}",
+              "latency_ms": 1618.5,
+              "input_tokens": 127,
+              "output_tokens": 12,
+              "thinking_tokens": 67,
+              "finish_reason": "STOP"
+            }
+          ]
+        }
+      }
+    },
+    "rag_grounding": {
+      "description": "Grounded answering over the SOP corpus (RAG)",
+      "cases": 8,
+      "models": {
+        "gemini-2.5-flash-lite": {
+          "cases": 8,
+          "passed": 8,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 1009.4,
+          "p95_latency_ms": 1064.4,
+          "mean_input_tokens": 379.2,
+          "mean_output_tokens": 35.2,
+          "mean_thinking_tokens": 0.0,
+          "cost_per_1k_requests_usd": 0.052,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "rag-01",
+              "passed": true,
+              "detail": "Insulin Glargine must be held between 2\u00b0C and 8\u00b0C (36\u00b0F to 46\u00b0F) at all times during storage and transit [1]. The product must not be frozen [1].",
+              "latency_ms": 1149.9,
+              "input_tokens": 397,
+              "output_tokens": 49,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-02",
+              "passed": true,
+              "detail": "An excursion above 8\u00b0C lasting more than 60 continuous minutes requires immediate quarantine of the affected lot [1].",
+              "latency_ms": 1064.4,
+              "input_tokens": 393,
+              "output_tokens": 25,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-03",
+              "passed": true,
+              "detail": "Meridian's contracted carrier for refrigerated biologics is MedExpress ColdChain [1]. Standard ambient freight carriers must not be used for `cold_chain_require",
+              "latency_ms": 967.8,
+              "input_tokens": 371,
+              "output_tokens": 39,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-04",
+              "passed": true,
+              "detail": "If a clinic's DEA registration has expired, the order is rejected and marked `REJECTED_LICENSE_EXPIRED`. This rejection is final, and the order cannot be retrie",
+              "latency_ms": 1050.9,
+              "input_tokens": 429,
+              "output_tokens": 66,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-05",
+              "passed": true,
+              "detail": "The warehouse uses First-Expiring-First-Out (FEFO) allocation. When multiple lots can fulfill an order, the lot with the earliest expiration date is chosen firs",
+              "latency_ms": 908.2,
+              "input_tokens": 363,
+              "output_tokens": 38,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-06",
+              "passed": true,
+              "detail": "The IoT temperature logger takes a reading at no less than one reading per 15 seconds [1].",
+              "latency_ms": 777.8,
+              "input_tokens": 357,
+              "output_tokens": 21,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-07",
+              "passed": true,
+              "detail": "This document does not contain information about Meridian's refund policy for opened vials.",
+              "latency_ms": 827.0,
+              "input_tokens": 335,
+              "output_tokens": 16,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-08",
+              "passed": true,
+              "detail": "No, a product that has been frozen at any point is considered non-viable and must be destroyed rather than returned to stock [3].",
+              "latency_ms": 1056.5,
+              "input_tokens": 389,
+              "output_tokens": 28,
+              "thinking_tokens": 0
+            }
+          ]
+        },
+        "gemini-2.5-flash": {
+          "cases": 8,
+          "passed": 8,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 880.1,
+          "p95_latency_ms": 1130.2,
+          "mean_input_tokens": 379.2,
+          "mean_output_tokens": 33.4,
+          "mean_thinking_tokens": 0.0,
+          "cost_per_1k_requests_usd": 0.1972,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "rag-01",
+              "passed": true,
+              "detail": "Insulin Glargine (SKU-INSULIN-01) must be held between 2\u00b0C and 8\u00b0C (36\u00b0F to 46\u00b0F) at all times during storage and transit [1]. The product must not be frozen [1",
+              "latency_ms": 896.4,
+              "input_tokens": 397,
+              "output_tokens": 60,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-02",
+              "passed": true,
+              "detail": "An excursion above 8\u00b0C lasting more than 60 continuous minutes requires immediate quarantine of the affected lot [1].",
+              "latency_ms": 848.0,
+              "input_tokens": 393,
+              "output_tokens": 25,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-03",
+              "passed": true,
+              "detail": "MedExpress ColdChain is the contracted carrier for refrigerated biologics [1].",
+              "latency_ms": 929.1,
+              "input_tokens": 371,
+              "output_tokens": 15,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-04",
+              "passed": true,
+              "detail": "If a clinic's DEA registration has expired, the order is rejected and marked `REJECTED_LICENSE_EXPIRED`. This rejection is terminal for that order, and it canno",
+              "latency_ms": 863.9,
+              "input_tokens": 429,
+              "output_tokens": 50,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-05",
+              "passed": true,
+              "detail": "The warehouse uses First-Expiring-First-Out (FEFO) allocation. The lot with the nearest expiration date is allocated first when multiple lots can satisfy an ord",
+              "latency_ms": 1130.8,
+              "input_tokens": 363,
+              "output_tokens": 39,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-06",
+              "passed": true,
+              "detail": "The shipment temperature logger must take a reading at no less than one reading per 15 seconds. [1]",
+              "latency_ms": 782.6,
+              "input_tokens": 357,
+              "output_tokens": 23,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-07",
+              "passed": true,
+              "detail": "The provided passages do not contain information about Meridian's refund policy for opened vials.",
+              "latency_ms": 820.5,
+              "input_tokens": 335,
+              "output_tokens": 17,
+              "thinking_tokens": 0
+            },
+            {
+              "case_id": "rag-08",
+              "passed": true,
+              "detail": "No, a lot that was accidentally frozen cannot be returned to sellable stock. A product that has been frozen at any point is considered non-viable and must be de",
+              "latency_ms": 1130.2,
+              "input_tokens": 389,
+              "output_tokens": 38,
+              "thinking_tokens": 0
+            }
+          ]
+        },
+        "gemini-2.5-pro": {
+          "cases": 8,
+          "passed": 8,
+          "accuracy_pct": 100.0,
+          "p50_latency_ms": 2144.1,
+          "p95_latency_ms": 2399.2,
+          "mean_input_tokens": 379.2,
+          "mean_output_tokens": 41.2,
+          "mean_thinking_tokens": 70.9,
+          "cost_per_1k_requests_usd": 1.5953,
+          "failed_cases": [],
+          "records": [
+            {
+              "case_id": "rag-01",
+              "passed": true,
+              "detail": "Insulin Glargine must be stored between 2\u00b0C and 8\u00b0C (36\u00b0F to 46\u00b0F) at all times [1]. The product must not be frozen [1]. Any product that has been frozen must b",
+              "latency_ms": 2399.2,
+              "input_tokens": 397,
+              "output_tokens": 60,
+              "thinking_tokens": 72
+            },
+            {
+              "case_id": "rag-02",
+              "passed": true,
+              "detail": "An excursion above 8\u00b0C lasting more than 60 continuous minutes requires immediate quarantine of the affected lot [1]. A qualified pharmacist must then review th",
+              "latency_ms": 2262.1,
+              "input_tokens": 393,
+              "output_tokens": 48,
+              "thinking_tokens": 74
+            },
+            {
+              "case_id": "rag-03",
+              "passed": true,
+              "detail": "MedExpress ColdChain is Meridian's contracted carrier for refrigerated biologics [1]. Cold-chain shipments must use carriers with an active refrigerated-transpo",
+              "latency_ms": 2176.9,
+              "input_tokens": 371,
+              "output_tokens": 34,
+              "thinking_tokens": 69
+            },
+            {
+              "case_id": "rag-04",
+              "passed": true,
+              "detail": "If a clinic's DEA registration has expired, the order is rejected and marked `REJECTED_LICENSE_EXPIRED` [1]. This rejection is terminal for that order, and the ",
+              "latency_ms": 2680.8,
+              "input_tokens": 429,
+              "output_tokens": 66,
+              "thinking_tokens": 83
+            },
+            {
+              "case_id": "rag-05",
+              "passed": true,
+              "detail": "The warehouse uses a First-Expiring-First-Out (FEFO) allocation order [1]. When multiple lots can satisfy an order, the lot with the nearest expiration date is ",
+              "latency_ms": 1901.3,
+              "input_tokens": 363,
+              "output_tokens": 42,
+              "thinking_tokens": 60
+            },
+            {
+              "case_id": "rag-06",
+              "passed": true,
+              "detail": "The temperature logger must take a reading at least once every 15 seconds [1].",
+              "latency_ms": 1927.2,
+              "input_tokens": 357,
+              "output_tokens": 18,
+              "thinking_tokens": 76
+            },
+            {
+              "case_id": "rag-07",
+              "passed": true,
+              "detail": "The provided passages do not contain information about Meridian's refund policy for opened vials.",
+              "latency_ms": 1621.4,
+              "input_tokens": 335,
+              "output_tokens": 17,
+              "thinking_tokens": 63
+            },
+            {
+              "case_id": "rag-08",
+              "passed": true,
+              "detail": "No, it cannot. A product that has been frozen at any point is considered non-viable and must be destroyed rather than returned to stock [3]. Excursions below 0\u00b0",
+              "latency_ms": 2111.2,
+              "input_tokens": 389,
+              "output_tokens": 45,
+              "thinking_tokens": 70
+            }
+          ]
+        }
+      }
+    }
+  },
+  "blessed_at": "2026-09-18T02:46:48Z"
+}
