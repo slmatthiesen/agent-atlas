@@ -22,6 +22,10 @@ gcp-key.json
 # Measured eval output is a published artifact, not a credential.
 !evals/results/*.json
 
+# The blessed baseline is the gate's reference point. It only means something if it
+# is committed and its diffs are reviewable.
+!evals/baseline.json
+
 # A catalog generated against someone's own project. Local by design: it names their
 # project, service accounts and IAM roles.
 agents_catalog.json

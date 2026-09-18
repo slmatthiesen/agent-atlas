@@ -1,0 +1,72 @@
+name: Evals
+
+# Two tiers on purpose. The comparator's own tests are free and always run. The live
+# gate costs real Vertex tokens, so it runs one cheap model over the golden set — a
+# gate that takes twenty minutes and real money gets bypassed, and a bypassed gate is
+# worse than none because it still reads as assurance. The full three-tier sweep stays
+# a manual call, for choosing a model rather than for defending one.
+
+on:
+  pull_request:
+    paths:
+      - "evals/**"
+      - "rag_engine.py"
+      - "corpus/**"
+      - ".github/workflows/evals.yml"
+  push:
+    branches: [main]
+    paths:
+      - "evals/**"
+      - "rag_engine.py"
+      - "corpus/**"
+  workflow_dispatch:
+
+jobs:
+  comparator:
+    name: Comparator unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - name: Test the gate's own logic
+        run: python -m pytest evals/test_compare.py -q
+
+  gate:
+    name: Regression gate (flash-lite)
+    runs-on: ubuntu-latest
+    needs: comparator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      # Forks and contributors have no credentials. Skip the paid run rather than
+      # failing their PR for something they cannot fix.
+      - id: creds
+        run: echo "present=${{ secrets.GCP_SERVICE_ACCOUNT_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
+      - if: steps.creds.outputs.present == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Run the golden set and diff against the baseline
+        if: steps.creds.outputs.present == 'true'
+        env:
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+        run: python evals/run_eval.py --models gemini-2.5-flash-lite --check
+
+      - name: Publish the run
+        if: steps.creds.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals/results/latest.json
+
+      - if: steps.creds.outputs.present != 'true'
+        run: echo "No GCP credentials configured — live gate skipped, comparator tests still ran."
