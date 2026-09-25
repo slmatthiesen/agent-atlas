@@ -18,6 +18,16 @@ shell expansion silently ate a character out of twelve cost strings (`$0.0780` b
 `.0780`). The backend loads the JSON file when it exists and falls back to the bundled demo
 catalog when it does not.
 
+**Never invent numbers.** Every count, cost, percentage, run id, status, and endpoint URL
+the dashboard shows must come from something you read — an API response, a query, a log
+file — at render time. If you have no source, show "no data" and say so in the summary.
+Do not hardcode metrics into the HTML, do not write `evals/results/*.json` by hand (only
+`evals/run_eval.py` produces them), and do not label anything "live" unless a live source
+is actually wired. An earlier run of this skill filled the portal with plausible city
+counts, freshness percentages, and passing eval scores that no run had produced.
+
+Do not delete this section or section 1 while re-pointing the repo at a new project.
+
 ## 1. Ask before you assume
 
 Ask these up front, in one message, and wait for the answers. Every one of them changes
