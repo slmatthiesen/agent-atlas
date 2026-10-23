@@ -11,7 +11,11 @@ from model_armor_gateway import screen_prompt_at_gateway
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-from gcp_auth import PROJECT_ID  # resolves from GCP_PROJECT or ADC
+from gcp_auth import OFFLINE, PROJECT_ID  # resolves from GCP_PROJECT or ADC
+
+if OFFLINE:
+    import pytest
+    pytest.skip("live Google Cloud test: needs ADC and a bootstrapped project", allow_module_level=True)
 
 print(f"==========================================================================")
 print(f"=== Phase 3 & Phase 4 Complete End-to-End Verification ({PROJECT_ID}) ===")

@@ -18,6 +18,10 @@ shell expansion silently ate a character out of twelve cost strings (`$0.0780` b
 `.0780`). The backend loads the JSON file when it exists and falls back to the bundled demo
 catalog when it does not.
 
+`python atlas_init.py` is the non-agent way to produce the same file. Read it to see the exact
+shape the backend expects, and prefer running it over hand-writing JSON when the user is
+happy to answer prompts.
+
 ## 1. Ask before you assume
 
 Ask these up front, in one message, and wait for the answers. Every one of them changes
@@ -66,13 +70,20 @@ grants are the blast radius. What an identity is *not* granted is the part worth
 
 ## 3. Write agents_catalog.json
 
-One JSON object — `project_id`, `generated_at`, and `agents` keyed by agent id. Match this
-shape, which is what the console renders:
+One JSON object — `project_id`, `generated_at`, `business`, `agents` keyed by agent id, and
+`security_test`. Match this shape, which is what the console renders:
 
 ```json
 {
   "project_id": "their-project",
   "generated_at": "2026-09-11",
+  "business": {"name": "Their Business", "tagline": "Agent Operations", "logo": "🏢", "accent": "#1D4E78"},
+  "security_test": {
+    "target_resource": "their-project.sensitive.table_no_agent_may_read",
+    "agents": {"svc-quote-bot": {"sa": "quote-bot@their-project.iam.gserviceaccount.com",
+                                 "scope": "What it legitimately reaches, one sentence."}},
+    "presets": [{"id": "exfil", "label": "Exfiltration attempt", "prompt": "Their attack prompt.", "note": ""}]
+  },
   "agents": {
     "svc-quote-bot": {
       "id": "svc-quote-bot",
@@ -122,6 +133,12 @@ so a mismatch with `status` renders a denial as though it were a grant.
 
 Rules for what goes in it:
 
+- **`business` is theirs, not Meridian's.** Ask for the name; if they decline, leave the block
+  out and the header shows "Your Business Here" rather than the demo company.
+- **`security_test` names a table no agent may read.** Ask which one. Without it the console
+  says no containment test is configured, which is honest; it never probes Meridian's
+  identities inside their project.
+
 - **`status` is a claim.** Write ALLOWED or REFUSED only from what the IAM policy actually
   says. If you did not verify it, say so in `purpose` instead of inventing a response code.
 - **Cost figures need a source.** Take the model from the service's own configuration and
@@ -165,7 +182,8 @@ python dashboard_backend.py
 catalog, and `"bundled-demo"` when it fell back. Check that before telling the user the
 dashboard is showing their project.
 
-Then say plainly which parts are now theirs and which are still demo content. The agent
-registry and the blast-radius descriptions come from their catalog. The containment matrix,
-the injection presets, the evals, and the RAG corpus remain this repository's demo material
+Then say plainly which parts are now theirs and which are still demo content. The header,
+the agent registry, the blast-radius descriptions and the containment test (identities,
+protected table, attack prompts) come from their catalog. The containment *matrix* grid, the
+portal's order workflow, the evals and the RAG corpus remain this repository's demo material
 until they are run against the user's own project.

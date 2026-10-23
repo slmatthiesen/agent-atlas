@@ -13,7 +13,9 @@ import time
 import urllib.error
 import urllib.request
 
-from gcp_auth import PROJECT_ID, REGION, get_access_token
+import google.auth.exceptions
+
+from gcp_auth import OFFLINE, PROJECT_ID, REGION, get_access_token
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -69,6 +71,8 @@ def check_model_armor_api(prompt_text: str) -> dict:
     """
     started = time.perf_counter()
     try:
+        if OFFLINE:
+            raise google.auth.exceptions.DefaultCredentialsError("offline")
         request = urllib.request.Request(
             ARMOR_ENDPOINT,
             data=json.dumps({"userPromptData": {"text": prompt_text}}).encode("utf-8"),
@@ -100,8 +104,11 @@ def check_model_armor_api(prompt_text: str) -> dict:
             **verdict,
         }
 
-    except (urllib.error.HTTPError, urllib.error.URLError, OSError, ValueError) as exc:
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError, ValueError,
+            google.auth.exceptions.GoogleAuthError) as exc:
         detail = exc.read().decode("utf-8")[:200] if isinstance(exc, urllib.error.HTTPError) else str(exc)[:200]
+        if OFFLINE:
+            detail = "OFFLINE: no Google Cloud credentials, so Model Armor was not called."
         lowered = prompt_text.lower()
         hit = next((kw for kw in INJECTION_KEYWORDS if kw in lowered), None)
         return {

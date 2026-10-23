@@ -14,7 +14,11 @@ import sys
 from google.api_core.exceptions import Forbidden, NotFound, PermissionDenied
 from google.cloud import bigquery, pubsub_v1
 
-from gcp_auth import PROJECT_ID, agent_sa, get_impersonated_credentials
+from gcp_auth import OFFLINE, PROJECT_ID, agent_sa, get_impersonated_credentials
+
+if OFFLINE:
+    import pytest
+    pytest.skip("live Google Cloud test: needs ADC and a bootstrapped project", allow_module_level=True)
 
 sys.stdout.reconfigure(encoding="utf-8")
 

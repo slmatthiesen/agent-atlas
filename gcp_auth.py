@@ -28,28 +28,38 @@ Then provision the demo into it with:
 """
 
 
-def _resolve_project_id() -> str:
-    """Find the project from the environment, else from Application Default Credentials.
+# The project the bundled demo pretends to run in when no Google Cloud credentials are
+# present. Nothing live is called in that mode; every Layer 2 / Layer 3 call reports
+# OFFLINE instead of a measured outcome, so the demo cannot pass itself off as evidence.
+OFFLINE_PROJECT_ID = "agent-atlas-offline-demo"
 
-    Deliberately has no built-in default: silently falling back to whichever project the
-    author happened to develop against is how someone ends up pointing at a project they
-    do not own and getting confusing permission errors.
+
+def _resolve_project_id() -> tuple[str, bool]:
+    """(project id, offline?) from the environment, else Application Default Credentials.
+
+    Deliberately has no built-in *live* default: silently falling back to whichever project
+    the author happened to develop against is how someone ends up pointing at a project they
+    do not own and getting confusing permission errors. Without any credentials at all the
+    demo still runs, offline, under a sentinel project id.
     """
     explicit = os.getenv("GCP_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT")
     if explicit:
-        return explicit
+        return explicit, False
 
     try:
         _, adc_project = google.auth.default(scopes=CLOUD_PLATFORM_SCOPE)
-    except google.auth.exceptions.DefaultCredentialsError as exc:
-        raise RuntimeError(f"{_NO_PROJECT_MESSAGE}\nUnderlying error: {exc}") from exc
+    except google.auth.exceptions.DefaultCredentialsError:
+        print(f"! no Google Cloud credentials found: running the bundled demo OFFLINE as "
+              f"{OFFLINE_PROJECT_ID}. Live checks will report OFFLINE, not a result.\n"
+              f"  To go live:  gcloud auth application-default login --project=<your-project>")
+        return OFFLINE_PROJECT_ID, True
 
     if not adc_project:
         raise RuntimeError(_NO_PROJECT_MESSAGE)
-    return adc_project
+    return adc_project, False
 
 
-PROJECT_ID = _resolve_project_id()
+PROJECT_ID, OFFLINE = _resolve_project_id()
 
 _lock = threading.Lock()
 _base_creds = None

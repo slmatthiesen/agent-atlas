@@ -342,12 +342,11 @@
 <div class="shell">
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="brand-mark">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
-      </div>
+      <div class="brand-mark" id="brandMark" style="font-size:1.3rem; display:flex; align-items:center; justify-content:center;">🏢</div>
       <div class="brand-text">
-        <h1>Governance Console</h1>
+        <h1 id="brandName">Governance Console</h1>
         <span id="brandSubtitle">connecting…</span>
+        <span id="brandBadge" class="tag" hidden style="display:inline-block; margin-top:4px; font-size:.65rem;"></span>
       </div>
     </div>
 
@@ -900,13 +899,36 @@ function maskAccount(str) {
   return String(str ?? "");
 }
 
+/* ----------------------------------------------------------------- business */
+// The header names whose agents this console is showing. The bundled example is
+// labelled as such so nobody mistakes Meridian for their own project.
+function applyBusiness(b, catalogSource) {
+  if (!b) return;
+  $("brandName").textContent = b.name;
+  $("brandMark").textContent = b.logo || "🏢";
+  $("brandMark").style.background = b.accent || "";
+  document.documentElement.style.setProperty("--brand-accent", b.accent || "#0F6E63");
+  document.title = `${b.name} — Governance Console`;
+  const badge = $("brandBadge");
+  if (b.demo) {
+    badge.textContent = "bundled example";
+    badge.hidden = false;
+  } else if (catalogSource === "generated" && b.name === "Your Business Here") {
+    badge.textContent = "name it: atlas_init.py";
+    badge.hidden = false;
+  } else {
+    badge.hidden = true;
+  }
+}
+
 /* ------------------------------------------------------------------- health */
 async function loadHealth() {
   try {
     const h = await api("/api/health");
     state.health = h;
-    $("healthPill").className = "health-pill";
-    $("healthText").textContent = `LIVE · ${h.region}`;
+    applyBusiness(h.business, h.agent_catalog);
+    $("healthPill").className = h.mode === "OFFLINE" ? "health-pill degraded" : "health-pill";
+    $("healthText").textContent = `${h.mode === "OFFLINE" ? "OFFLINE DEMO" : "LIVE"} · ${h.region}`;
     $("brandSubtitle").textContent = `${h.project_id} · ${h.models.flash_lite} → ${h.models.pro}`;
   } catch (err) {
     $("healthPill").className = "health-pill degraded";

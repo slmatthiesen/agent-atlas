@@ -10,9 +10,13 @@ Agent Atlas is a working reference and dashboard generator for multi-agent syste
 
 ---
 
-## 🚀 1. Run the Demo (Local Preview)
+## 🚀 1. See the example (no Google Cloud account needed)
 
-If you just want to see what the dashboard looks like and how blast-radius containment is modeled, you can run it locally with the bundled mock data. No GCP provisioning required.
+The repo ships one worked example: **Meridian Clinical Supply**, a fictional pharma
+distributor with six agents whose blast radius is enforced by IAM. Without Google Cloud
+credentials it runs offline: the pages render, the agent registry and evals are real, and
+every live check (Model Armor, the IAM probe) reports `OFFLINE` instead of a verdict. The
+header labels it "bundled example" so it cannot be mistaken for your project.
 
 ```bash
 uv venv && source .venv/bin/activate       # or: python -m venv .venv
@@ -23,32 +27,40 @@ python dashboard_backend.py
 - **Business operations portal** → <http://127.0.0.1:8090/>
 - **Governance console** → <http://127.0.0.1:8090/console>
 
+With `gcloud auth application-default login` and a project bootstrapped by `bootstrap.py`,
+the same example runs live: the 403s on screen come from Google Cloud IAM, not from this app.
+
 ---
 
-## ☁️ 2. Connect Your Own GCP Project
+## 🏢 2. Build it for your business
 
-You can use the included Antigravity skill to map your *real* GCP agents, Cloud Run services, and IAM policies, and generate a custom dashboard for your own system.
+The example and your dashboard are two separate things. Your business lives in
+`agents_catalog.json` (git-ignored, because it names your project and identities). When that
+file exists, the dashboard drops Meridian entirely: your name and logo in the header, your
+agents in the registry, your protected table and attack prompts in the containment test.
+Delete the file and the example comes back.
 
-**Step 1:** Authenticate your local environment to your GCP project.
+**Option A — the wizard.** Answers a few questions and writes the catalog. Add `--discover`
+to list your Cloud Run services and service accounts first (read-only `gcloud`).
+
 ```bash
+python atlas_init.py --discover
 export GCP_PROJECT="your-project-id"       # Windows: $env:GCP_PROJECT="your-project-id"
-gcloud auth application-default login --project=$GCP_PROJECT
-```
-
-**Step 2:** Open this repository in the Antigravity IDE (or your preferred coding agent) and simply ask:
-> *"build me a dashboard based on my Gemini agents"*
-
-**Step 3:** The agent will automatically invoke the runbook at `.agents/skills/build-gcp-dashboard/SKILL.md`. It will:
-1. Map your Cloud Run services and IAM policies using read-only `gcloud` commands.
-2. Ask you clarifying questions about what each agent is *supposed* to do.
-3. Flag over-permissioned identities or missing boundaries.
-4. Generate a custom `agents_catalog.json` tailored to your environment.
-
-**Step 4:** Restart the backend.
-```bash
 python dashboard_backend.py
 ```
-The console will now drop the demo mock data and visualize your own live GCP agents and their security blast radiuses!
+
+**Option B — a coding agent.** Open the repo in Antigravity (or any agent that reads
+`.agents/skills/`) and ask *"build me a dashboard based on my Gemini agents"*. The runbook at
+`.agents/skills/build-gcp-dashboard/SKILL.md` maps your services and IAM policies read-only,
+asks what each agent is meant to reach, flags over-permissioned identities, and writes the
+same catalog.
+
+Either way, check `/api/health`: `"agent_catalog": "generated"` means the console is showing
+you, `"bundled-demo"` means it fell back. A catalog with no business name shows
+**Your Business Here** until you give it one.
+
+What the catalog does not cover yet, and so stays demo material even with a catalog: the
+containment *matrix* grid, the order workflow in the portal, the evals and the RAG corpus.
 
 ---
 
