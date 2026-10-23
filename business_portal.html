@@ -509,8 +509,8 @@
 
     <div class="topbar">
       <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.2rem; min-width:0;">
-        <span class="topbar-label">Vertical</span>
-        <div class="seg" role="group" aria-label="Demo vertical">
+        <span class="topbar-label" id="verticalLabel">Vertical</span>
+        <div class="seg" role="group" aria-label="Demo vertical" id="verticalSwitcher">
           <button class="seg-btn" id="btnIndustryPharma">🏥 Clinical &amp; Pharma</button>
           <button class="seg-btn" id="btnIndustryRealty">🏡 Real Estate</button>
           <button class="seg-btn active" id="btnIndustryFintech">⚡ FinTech</button>
@@ -979,10 +979,17 @@ $("menuBtn").addEventListener("click", () => $("sidebar").classList.toggle("open
 async function loadHealth() {
   try {
     const h = await api("/api/health");
-    $("healthText").textContent = `LIVE · ${h.region}`;
+    $("healthText").textContent = `${h.mode === "OFFLINE" ? "OFFLINE DEMO" : "LIVE"} · ${h.region}`;
     $("health").title = `Project ${h.project_id} · Model Armor template ${h.model_armor_template}`;
     state.provisioning = h.live_provisioning;
     state.project = h.project_id;
+    // A generated catalog belongs to one business; the industry switcher is demo-only.
+    if (h.business && !h.business.demo) {
+      tenantBrand = h.business;
+      applyBrand(currentIndustry);
+      $("verticalSwitcher").style.display = "none";
+      $("verticalLabel").textContent = "Blast Radius grid and workflow below are the bundled example, not your project";
+    }
   } catch {
     $("health").classList.add("down");
     $("healthText").textContent = "backend unreachable";
@@ -1252,11 +1259,20 @@ const BRANDS = {
   },
 };
 
+// Set from /api/health when the console is serving a user's own catalog. Null means the
+// bundled example, whose three industries are the demo content.
+let tenantBrand = null;
+
 function applyBrand(industry) {
-  const b = BRANDS[industry] || BRANDS.pharma;
+  const b = tenantBrand
+    ? { name: tenantBrand.name, sub: tenantBrand.tagline || "Agent Operations",
+        accent: tenantBrand.accent || "#1D4E78", soft: "#EEF2F7", logo: tenantBrand.logo || "🏢" }
+    : (BRANDS[industry] || BRANDS.pharma);
   $("brandName").textContent = b.name;
   $("brandSub").textContent = b.sub;
-  $("brandMark").innerHTML = `<svg viewBox="0 0 24 24">${b.mark}</svg>`;
+  $("brandMark").innerHTML = b.logo
+    ? `<span style="font-size:1.3rem; line-height:1;">${b.logo}</span>`
+    : `<svg viewBox="0 0 24 24">${b.mark}</svg>`;
   const mobile = $("mobileBrandTitle");
   if (mobile) mobile.textContent = b.name;
   document.title = `${b.name} — Agent Operations`;
@@ -1486,7 +1502,7 @@ async function loadBlast() {
   const body = $("blastBody");
   if (!vertical) {
     blastGrid = null;
-    $("blastLabel").textContent = BRANDS[currentIndustry]?.name || "This vertical";
+    $("blastLabel").textContent = tenantBrand?.name || BRANDS[currentIndustry]?.name || "This vertical";
     $("blastTagline").textContent = "No containment model has been declared for this vertical yet.";
     $("blastMeta").textContent = "no matrix";
     $("blastSummary").className = "pill grey";

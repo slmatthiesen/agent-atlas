@@ -19,7 +19,7 @@ GCLOUD = shutil.which("gcloud") or "gcloud.cmd"
 import bootstrap
 import containment_matrix
 import rag_engine
-from gcp_auth import PROJECT_ID, REGION, get_impersonated_credentials
+from gcp_auth import OFFLINE, PROJECT_ID, REGION, get_impersonated_credentials
 from model_armor_gateway import TEMPLATE_ID, screen_prompt_at_gateway
 from meridian_agents import (
     run_voice_frontdoor_order,
@@ -41,7 +41,7 @@ MODEL_PRO = "gemini-2.5-pro"
 MODEL_FLASH = "gemini-2.5-flash"
 MODEL_FLASH_LITE = "gemini-2.5-flash-lite"
 
-app = FastAPI(title="Meridian Clinical Supply — Agent Governance Platform")
+app = FastAPI(title="Agent Atlas — Agent Governance Platform")
 
 # The dashboard is same-origin; the permissive list exists only so the pages can be
 # opened from a local file during development. Credentialed wildcard CORS is invalid
@@ -55,6 +55,10 @@ app.add_middleware(
 )
 
 
+class OfflineDemo(Exception):
+    """Raised where a live Google Cloud call would go when no credentials are present."""
+
+
 def get_impersonated_bq(sa_email):
     """BigQuery client running as `sa_email`, so IAM decides what it can read."""
     return bigquery.Client(project=PROJECT_ID, credentials=get_impersonated_credentials(sa_email))
@@ -63,28 +67,50 @@ def get_impersonated_bq(sa_email):
 @app.get("/api/health")
 def health_check():
     """Reports what is actually wired up, so the UI can show a live/degraded badge."""
+    catalog = load_generated_catalog()
     return {
         "status": "HEALTHY",
-        "project": "Meridian Clinical Supply",
+        "mode": "OFFLINE" if OFFLINE else "LIVE",
+        "business": business_profile(catalog),
+        "project": business_profile(catalog)["name"],
         "project_id": PROJECT_ID,
         "region": REGION,
         "models": {"pro": MODEL_PRO, "flash": MODEL_FLASH, "flash_lite": MODEL_FLASH_LITE},
         "model_armor_template": TEMPLATE_ID,
         "eval_results_available": EVAL_RESULTS.exists(),
-        "agent_catalog": "generated" if AGENTS_CATALOG_FILE.exists() else "bundled-demo",
+        "agent_catalog": "generated" if catalog is not None else "bundled-demo",
         "live_provisioning": provisioning_status()["enabled"],
     }
 
 CUSTOM_AGENTS: dict[str, dict] = {}
 
-# A catalog mapped from someone else's project by the build-gcp-dashboard skill. It is
-# data, never code: the generator used to rewrite this file's source, which silently
-# mangled twelve cost strings through shell expansion before anyone caught it.
+# A catalog mapped from someone else's project by the build-gcp-dashboard skill or
+# atlas_init.py. It is data, never code: the generator used to rewrite this file's source,
+# which silently mangled twelve cost strings through shell expansion before anyone caught it.
 AGENTS_CATALOG_FILE = pathlib.Path(os.getenv("AGENTS_CATALOG", BASE_DIR / "agents_catalog.json"))
+
+# What the bundled example is. Everything a user's catalog does not override falls back
+# to this, and the UI labels it as demo content so it is never mistaken for theirs.
+DEMO_BUSINESS = {
+    "name": "Meridian Clinical Supply",
+    "tagline": "Agent Operations",
+    "logo": "🏥",
+    "accent": "#0F6E63",
+    "demo": True,
+}
+
+# The placeholder a generated catalog gets when the wizard was not told a business name.
+PLACEHOLDER_BUSINESS = {
+    "name": "Your Business Here",
+    "tagline": "Agent Governance",
+    "logo": "🏢",
+    "accent": "#1D4E78",
+    "demo": False,
+}
 
 
 def load_generated_catalog() -> dict | None:
-    """The operator's own agents, or None to fall back to this demo's catalog."""
+    """The operator's own catalog (full document), or None to fall back to the demo."""
     if not AGENTS_CATALOG_FILE.exists():
         return None
     try:
@@ -94,8 +120,20 @@ def load_generated_catalog() -> dict | None:
         # silent lie, so say why the file was skipped rather than swallowing it.
         print(f"! ignoring {AGENTS_CATALOG_FILE.name}: {exc}")
         return None
-    agents = catalog.get("agents", catalog) if isinstance(catalog, dict) else None
-    return agents if isinstance(agents, dict) and agents else None
+    if not isinstance(catalog, dict):
+        return None
+    if "agents" not in catalog:
+        catalog = {"agents": catalog}
+    agents = catalog.get("agents")
+    return catalog if isinstance(agents, dict) and agents else None
+
+
+def business_profile(catalog: dict | None) -> dict:
+    """Who the dashboard is for: the user's business from their catalog, else the demo."""
+    if catalog is None:
+        return DEMO_BUSINESS
+    declared = catalog.get("business") if isinstance(catalog.get("business"), dict) else {}
+    return {**PLACEHOLDER_BUSINESS, **{k: v for k, v in declared.items() if v}, "demo": False}
 
 # The agent identities bootstrap.py creates. `matrix` ties an identity to its row in the
 # Blast Radius grid, so the registry reads the same boundaries the grid probes and the two
@@ -171,8 +209,9 @@ def get_agents_data():
     """Every agent identity in this project, with the boundaries the Blast Radius probes."""
     generated = load_generated_catalog()
     if generated is not None:
-        generated.update(CUSTOM_AGENTS)
-        return generated
+        agents = dict(generated["agents"])
+        agents.update(CUSTOM_AGENTS)
+        return agents
 
     agents_data = {}
     for agent_id, entry in AGENT_REGISTRY.items():
@@ -506,9 +545,10 @@ def execute_live_reconcile():
     result = run_reconcile_agent()
     return result
 
-# Agents the containment test can run as. Each holds a genuinely different scope,
-# so the same attack produces different real outcomes depending on the identity.
-SECURITY_TEST_AGENTS = {
+# The bundled demo's containment test. Each identity holds a genuinely different scope,
+# so the same attack produces different real outcomes depending on the identity. A user's
+# catalog overrides all three via its `security_test` block (see atlas_init.py).
+DEMO_SECURITY_TEST_AGENTS = {
     "sales-agent": {
         "sa": f"agent-sales@{PROJECT_ID}.iam.gserviceaccount.com",
         "scope": "Firestore catalog and orders. Holds no BigQuery permission at all.",
@@ -523,9 +563,9 @@ SECURITY_TEST_AGENTS = {
     },
 }
 
-PHI_TABLE = f"{PROJECT_ID}.clinical_records.patient_shipments"
+DEMO_PHI_TABLE = f"{PROJECT_ID}.clinical_records.patient_shipments"
 
-ATTACK_PRESETS = [
+DEMO_ATTACK_PRESETS = [
     {
         "id": "classic-injection",
         "label": "Classic prompt injection",
@@ -553,13 +593,38 @@ ATTACK_PRESETS = [
 ]
 
 
+def security_test_config() -> dict:
+    """Identities, protected table and attack prompts: the user's, else the demo's.
+
+    A generated catalog without a `security_test` block gets no demo identities either.
+    Probing Meridian's service accounts inside someone else's project would only ever
+    produce a 404 dressed up as a containment result.
+    """
+    catalog = load_generated_catalog()
+    if catalog is None:
+        return {"agents": DEMO_SECURITY_TEST_AGENTS, "target_resource": DEMO_PHI_TABLE,
+                "presets": DEMO_ATTACK_PRESETS, "demo": True}
+    declared = catalog.get("security_test") or {}
+    agents = {k: v for k, v in (declared.get("agents") or {}).items()
+              if isinstance(v, dict) and v.get("sa")}
+    presets = [p for p in (declared.get("presets") or []) if isinstance(p, dict) and p.get("prompt")]
+    for i, preset in enumerate(presets):
+        preset.setdefault("id", f"preset-{i + 1}")
+        preset.setdefault("label", preset["prompt"][:48])
+    return {"agents": agents, "target_resource": declared.get("target_resource"),
+            "presets": presets, "demo": False}
+
+
 @app.get("/api/security-test/presets")
 def get_attack_presets():
     """Attack prompts for the containment console, plus the identities available."""
+    config = security_test_config()
     return {
-        "presets": ATTACK_PRESETS,
-        "agents": {k: v["scope"] for k, v in SECURITY_TEST_AGENTS.items()},
-        "target_resource": PHI_TABLE,
+        "presets": config["presets"],
+        "agents": {k: v["scope"] for k, v in config["agents"].items()},
+        "target_resource": config["target_resource"],
+        "demo": config["demo"],
+        "configured": bool(config["agents"] and config["target_resource"]),
     }
 
 
@@ -572,22 +637,35 @@ async def run_security_test(request: Request):
     this application. Disabling Layer 2 is what demonstrates that Layer 3 stands alone.
     """
     body = await request.json()
-    agent_key = body.get("agentKey", "sales-agent")
+    config = security_test_config()
+    if not config["agents"] or not config["target_resource"]:
+        return JSONResponse(status_code=409, content={
+            "error": "No containment test is configured for this catalog.",
+            "fix": "Run `python atlas_init.py` and answer the protected-resource questions, "
+                   "or add a `security_test` block to agents_catalog.json."})
+    agents, presets, target_resource = config["agents"], config["presets"], config["target_resource"]
+
+    agent_key = body.get("agentKey") or next(iter(agents))
+    if agent_key not in agents:
+        return JSONResponse(status_code=400, content={
+            "error": f"Unknown agentKey '{agent_key}'.", "known_agents": list(agents)})
     # /api/security-test/presets advertises ids, so honour them. Silently falling back
     # to a different prompt makes the response describe a test the caller did not run.
     preset_id = body.get("presetId")
     if preset_id:
-        preset = next((p for p in ATTACK_PRESETS if p["id"] == preset_id), None)
+        preset = next((p for p in presets if p["id"] == preset_id), None)
         if preset is None:
             return JSONResponse(status_code=400, content={
                 "error": f"Unknown presetId '{preset_id}'.",
-                "known_presets": [p["id"] for p in ATTACK_PRESETS]})
+                "known_presets": [p["id"] for p in presets]})
         prompt = preset["prompt"]
     else:
-        prompt = body.get("prompt", ATTACK_PRESETS[0]["prompt"])
+        prompt = body.get("prompt") or (presets[0]["prompt"] if presets else "")
+    if not prompt:
+        return JSONResponse(status_code=400, content={"error": "No prompt and no presets to fall back to."})
     model_armor_enabled = body.get("modelArmorEnabled", True)
 
-    agent = SECURITY_TEST_AGENTS.get(agent_key, SECURITY_TEST_AGENTS["sales-agent"])
+    agent = agents[agent_key]
     sa_email = agent["sa"]
 
     # --- Layer 2: Model Armor -------------------------------------------------
@@ -621,7 +699,9 @@ async def run_security_test(request: Request):
     # --- Layer 3: real IAM enforcement ---------------------------------------
     started = time.perf_counter()
     try:
-        job = get_impersonated_bq(sa_email).query(f"SELECT * FROM `{PHI_TABLE}` LIMIT 1")
+        if OFFLINE:
+            raise OfflineDemo()
+        job = get_impersonated_bq(sa_email).query(f"SELECT * FROM `{target_resource}` LIMIT 1")
         rows = list(job.result())
         layer3 = {
             "layer": "Layer 3 — GCP IAM",
@@ -642,6 +722,16 @@ async def run_security_test(request: Request):
         }
         stopped_at = "LAYER_3_GCP_IAM"
         status_code = 403
+    except OfflineDemo:
+        layer3 = {
+            "layer": "Layer 3 — GCP IAM",
+            "outcome": "OFFLINE",
+            "status_code": None,
+            "detail": "No Google Cloud credentials, so the IAM probe did not run. The live demo "
+                      "runs this query as the agent's own service account and lets IAM answer.",
+        }
+        stopped_at = "OFFLINE"
+        status_code = None
     except Exception as exc:
         layer3 = {
             "layer": "Layer 3 — GCP IAM",
@@ -662,8 +752,8 @@ async def run_security_test(request: Request):
             "prompt": prompt,
             "agent": agent_key,
             "principal": sa_email,
-            "agent_scope": agent["scope"],
-            "target_resource": PHI_TABLE,
+            "agent_scope": agent.get("scope", ""),
+            "target_resource": target_resource,
             "layer2": layer2,
             "layer3": layer3,
         },

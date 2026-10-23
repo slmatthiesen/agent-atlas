@@ -91,6 +91,10 @@ confirmed by the user. The default view shows the target's brand; demo brands re
 behind the vertical switcher. Why: a Happy Hour dashboard shipped with "Meridian Clinical"
 in the header.
 
+`python atlas_init.py` is the non-agent way to produce the same file. Read it to see the exact
+shape the backend expects, and prefer running it over hand-writing JSON when the user is
+happy to answer prompts.
+
 ## 1. Ask before you assume
 
 Ask these up front, in one message, and wait for the answers. Every one of them changes
@@ -171,7 +175,8 @@ query — it goes in the endpoint and in the summary.
 
 ## 3. Write agents_catalog.json
 
-One JSON object — `project_id`, `generated_at`, and `agents` keyed by agent id. The console
+One JSON object — `project_id`, `generated_at`, `business`, `security_test`, and `agents`
+keyed by agent id. The console
 renders this shape; `title`, `owner`, `runtimeLogin`, `architecture.blastRadius`,
 `architecture.blastDesc`, `reachableEndpoints`, `accountsAccess`, `auditLogs` and `gcpLinks`
 must be present (arrays may be empty; `gcpLinks` may be `{}`). Values in angle brackets are
@@ -181,6 +186,12 @@ slots to fill from discovery — never copy the example text.
 {
   "project_id": "<gcp project id, or the target repo name>",
   "generated_at": "<today, YYYY-MM-DD>",
+  "business": {"name": "<their business name>", "tagline": "<short line>", "logo": "<one emoji>", "accent": "<hex>"},
+  "security_test": {
+    "target_resource": "<project.dataset.table no agent may read>",
+    "agents": {"<agent-id>": {"sa": "<its service account>", "scope": "<what it legitimately reaches>"}},
+    "presets": [{"id": "<slug>", "label": "<short>", "prompt": "<an attack prompt in their domain>", "note": ""}]
+  },
   "agents": {
     "<agent-id>": {
       "id": "<agent-id>",
@@ -217,6 +228,11 @@ slots to fill from discovery — never copy the example text.
 
 Rules for what goes in it:
 
+- **`business` is theirs, not Meridian's.** Ask for the name; if they decline, leave the block
+  out and the header shows "Your Business Here" rather than the demo company.
+- **`security_test` names a table no agent may read.** Ask which one. Without it the console
+  says no containment test is configured, which is honest; it never probes Meridian's
+  identities inside their project.
 - **`status` is a claim about policy, not a response.** Write ALLOWED/REFUSED only from the
   IAM policy or credential config you read. Never write an HTTP code (`200 OK`,
   `403 accessDenied`) unless you made that request and are quoting it. Unverified →
@@ -331,9 +347,9 @@ Not done until each step has run and its output is in the summary.
 5. **Nothing deleted.** `git diff --stat main -- corpus evals/baseline.json .agents test_*.py`
    shows no deletions, and `git diff main -- .agents` is empty.
 6. **Tests.** `python -m pytest evals/test_compare.py -q` (offline) and `python -m pytest -q`.
-   The full suite needs a GCP project with Application Default Credentials; without one,
-   collection fails in `gcp_auth.py`. Report that failure as-is — do not stub it out.
+   Without Application Default Credentials the backend runs offline and the live tests
+   skip; report the skip count as-is — do not stub credentials in.
 
-Then say plainly which parts are now theirs (catalog, brand, stepper, any wired panels)
-and which are still demo content (containment grid, injection presets, evals, sample logs,
-Meridian corpus), and list every question from section 1 you resolved by assumption.
+Then say plainly which parts are now theirs (catalog, brand, containment test identities,
+protected table and prompts, stepper, any wired panels) and which are still demo content
+(containment matrix grid, portal order workflow, evals, sample logs, Meridian corpus), and list every question from section 1 you resolved by assumption.
