@@ -911,7 +911,7 @@ function applyBusiness(b, catalogSource) {
   document.title = `${b.name} — Governance Console`;
   const badge = $("brandBadge");
   if (b.demo) {
-    badge.textContent = "bundled example";
+    badge.textContent = "bundled example · yours: python atlas_init.py";
     badge.hidden = false;
   } else if (catalogSource === "generated" && b.name === "Your Business Here") {
     badge.textContent = "name it: atlas_init.py";
