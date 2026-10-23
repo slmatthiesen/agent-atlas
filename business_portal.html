@@ -509,8 +509,8 @@
 
     <div class="topbar">
       <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.2rem; min-width:0;">
-        <span class="topbar-label">Vertical</span>
-        <div class="seg" role="group" aria-label="Demo vertical">
+        <span class="topbar-label" id="verticalLabel">Vertical</span>
+        <div class="seg" role="group" aria-label="Demo vertical" id="verticalSwitcher">
           <button class="seg-btn" id="btnIndustryPharma">🏥 Clinical &amp; Pharma</button>
           <button class="seg-btn" id="btnIndustryRealty">🏡 Real Estate</button>
           <button class="seg-btn active" id="btnIndustryFintech">⚡ FinTech</button>
@@ -987,7 +987,8 @@ async function loadHealth() {
     if (h.business && !h.business.demo) {
       tenantBrand = h.business;
       applyBrand(currentIndustry);
-      document.querySelectorAll("[id^=btnIndustry]").forEach(btn => btn.hidden = true);
+      $("verticalSwitcher").style.display = "none";
+      $("verticalLabel").textContent = "Blast Radius grid and workflow below are the bundled example, not your project";
     }
   } catch {
     $("health").classList.add("down");
